@@ -112,10 +112,11 @@ func (c *Chat) PushTextMessage(to string, msg string, customNotify *string) erro
 
 func (c *Chat) PushWebView(to string, label string, title string, detail string, path string, img string, customNotify *string) error {
 	type Choice struct {
-		Label string `json:"label"`
-		Type  string `json:"type"`
-		Url   string `json:"url"`
-		Size  string `json:"size"`
+		Label        string `json:"label"`
+		Type         string `json:"type"`
+		Url          string `json:"url"`
+		Size         string `json:"size"`
+		OneChatToken string `json:"onechat_token"`
 	}
 	type Elements struct {
 		Image   string   `json:"image"`
@@ -140,10 +141,11 @@ func (c *Chat) PushWebView(to string, label string, title string, detail string,
 				Detail: detail,
 				Choices: []Choice{
 					{
-						Label: label,
-						Type:  "webview",
-						Url:   path,
-						Size:  "full",
+						Label:        label,
+						Type:         "webview",
+						Url:          path,
+						Size:         "full",
+						OneChatToken: "true",
 					},
 				},
 			},
