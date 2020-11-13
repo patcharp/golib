@@ -66,12 +66,30 @@ func (r *Redis) Get(key string, v interface{}) error {
 	return nil
 }
 
+func (r *Redis) FindByPattern(pattern string) (map[string]interface{}, error) {
+	var values map[string]interface{}
+	keys, err := r.Client.Keys(pattern).Result()
+	if err != nil {
+		return values, err
+	}
+	for _, key := range keys {
+		b, err := r.Client.Get(key).Bytes()
+		if err != nil {
+			continue
+		}
+		if err := json.Unmarshal(b, values[key]); err != nil {
+			continue
+		}
+	}
+	return values, nil
+}
+
 func (r *Redis) Del(key string) error {
 	return r.Client.Del(key).Err()
 }
 
-func (r *Redis) DelPattern(key string) error {
-	keys, err := r.Client.Keys(key).Result()
+func (r *Redis) DelByPattern(pattern string) error {
+	keys, err := r.Client.Keys(pattern).Result()
 	if err != nil {
 		return err
 	}
@@ -80,6 +98,10 @@ func (r *Redis) DelPattern(key string) error {
 
 func (r *Redis) Flush() error {
 	return r.Client.FlushAll().Err()
+}
+
+func (r *Redis) FlushByPattern(pattern string) error {
+	return r.DelByPattern(pattern)
 }
 
 func (r *Redis) IsKeyNotFound(err error) bool {
