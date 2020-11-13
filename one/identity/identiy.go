@@ -113,7 +113,7 @@ func (id *Identity) RefreshNewToken(refreshToken string) (AuthenticationResult, 
 	return result, nil
 }
 
-func (id *Identity) VerifyAuthorizedCode(authCode string) (AuthenticationResult, error) {
+func (id *Identity) VerifyAuthorizedCode(authCode string, profile bool) (AuthenticationResult, error) {
 	var result AuthenticationResult
 	if authCode == "" {
 		return result, errors.New("authorization code required")
@@ -146,6 +146,12 @@ func (id *Identity) VerifyAuthorizedCode(authCode string) (AuthenticationResult,
 	}
 	if err := json.Unmarshal(resp.Body, &result); err != nil {
 		return result, err
+	}
+	if profile {
+		result.Profile, err = id.profile(result.TokenType, result.AccessToken)
+		if err != nil {
+			return result, err
+		}
 	}
 	return result, nil
 }
