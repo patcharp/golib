@@ -25,14 +25,6 @@ type Server struct {
 	ctx    *echo.Echo
 }
 
-type Response struct {
-	Data    interface{} `json:"data,omitempty"`
-	Message interface{} `json:"message,omitempty"`
-	Error   interface{} `json:"error,omitempty"`
-	Total   int         `json:"total,omitempty"`
-	Count   int         `json:"count,omitempty"`
-}
-
 func New(config Config) Server {
 	s := Server{
 		config: config,
