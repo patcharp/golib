@@ -27,6 +27,14 @@ func New(host string, port string, db int) Redis {
 	}
 }
 
+func NewWithCfg(cfg Config) Redis {
+	return New(
+		cfg.Host,
+		cfg.Port,
+		cfg.Db,
+	)
+}
+
 func (r *Redis) Ping() error {
 	if _, err := r.Client.Ping().Result(); err != nil {
 		return err
