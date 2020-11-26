@@ -58,6 +58,9 @@ func (db *Database) Connect() error {
 	switch db.driver {
 	case DriverMSSQL:
 		driver = DriverMSSQL
+		if db.config.Port == "" {
+			db.config.Port = "3306"
+		}
 		dsn = fmt.Sprintf(
 			"sqlserver://%s:%s@%s:%s?database=%s",
 			db.config.Username,
@@ -73,12 +76,11 @@ func (db *Database) Connect() error {
 			sslMode = "enable"
 		}
 		dsn = fmt.Sprintf(
-			"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s TimeZone=Asia/Bangkok",
+			"postgresql://%s@%s:%s/%s?sslmode=%s",
+			db.config.Username,
 			db.config.Host,
 			db.config.Port,
-			db.config.Username,
 			db.config.Name,
-			db.config.Password,
 			sslMode,
 		)
 	case DriverSQLLite:
