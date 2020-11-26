@@ -20,6 +20,7 @@ type Config struct {
 	Prod        bool
 	PackageName string
 	Filename    string
+	SSLEnabled  bool
 }
 
 type Database struct {
@@ -67,13 +68,18 @@ func (db *Database) Connect() error {
 		)
 	case DriverPostgres:
 		driver = DriverPostgres
+		sslMode := "disable"
+		if db.config.SSLEnabled {
+			sslMode = "enable"
+		}
 		dsn = fmt.Sprintf(
-			"host=%s port=%s user=%s dbname=%s password=%s",
+			"host=%s port=%s user=%s dbname=%s password=%s sslmode=%s TimeZone=Asia/Bangkok",
 			db.config.Host,
 			db.config.Port,
 			db.config.Username,
 			db.config.Name,
 			db.config.Password,
+			sslMode,
 		)
 	case DriverSQLLite:
 		driver = DriverSQLLite
