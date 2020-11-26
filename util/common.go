@@ -4,7 +4,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
+	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 func GetEnv(key, fallback string) string {
@@ -47,4 +49,18 @@ func Contains(slice []string, item string) bool {
 func ExitWithCode(startTime time.Time, code int) {
 	log.Infoln("Elapsed time", time.Since(startTime).Seconds(), "second(s).")
 	os.Exit(code)
+}
+
+// Real display width string - remove floating char
+func StringDisplayWidth(str string) int {
+	floatingChar := map[string][]string{
+		"thai": []string{"ิ", "ี", "ึ", "ื", "ุ", "ู", "่", "้", "๊", "๋", "์"},
+	}
+	count := 0
+	for _, l := range floatingChar {
+		for _, v := range l {
+			count += strings.Count(str, v)
+		}
+	}
+	return utf8.RuneCountInString(str) - count
 }
