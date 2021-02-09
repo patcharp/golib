@@ -1,10 +1,31 @@
 package identity
 
-import uuid "github.com/satori/go.uuid"
+import (
+	uuid "github.com/satori/go.uuid"
+)
 
-//
-// Identity
-//
+const (
+	ProductionEndpoint = "https://one.th"
+
+	grantTypePassword     = "password"
+	grantTypeCode         = "authorization_code"
+	grantTypeRefreshToken = "refresh_token"
+
+	MaxTimeOut = 10
+)
+
+type IdCredential struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Endpoint string `json:"endpoint"`
+}
+
+type Client struct {
+	ApiEndpoint  string
+	ClientId     string
+	ClientSecret string
+	RedirectUrl  string
+}
 
 // Authentication result model
 type AuthenticationResult struct {
@@ -49,7 +70,7 @@ type AccountProfile struct {
 	NameOnDocENG       string          `json:"name_on_document_eng"`
 	Mobile             []AccountMobile `json:"mobile"`
 	Email              []AccountEmail  `json:"email"`
-	Address            []string        `json:"address"`
+	Address            interface{}     `json:"address"`
 	AccountAttr        []string        `json:"account_attribute"`
 	Status             string          `json:"status"`
 	LastUpdate         string          `json:"last_update"`

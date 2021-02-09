@@ -10,36 +10,16 @@ import (
 	"net/http"
 )
 
-const ProductionEndpoint = "https://chat-api.one.th/message/api/v1"
-
-type Chat struct {
-	BotId       string
-	Token       string
-	TokenType   string
-	ApiEndpoint string
-}
-
-type Friend struct {
-	OneEmail    string `json:"one_email"`
-	UserId      string `json:"user_id"`
-	AccountId   string `json:"one_id"`
-	DisplayName string `json:"display_name"`
-	Type        string `json:"type"`
-}
-
-type Profile struct {
-	Email          string `json:"email"`
-	Nickname       string `json:"nickname"`
-	AccountId      string `json:"one_id"`
-	ProfilePicture string `json:"profilepicture"`
-}
-
-func NewChatBot(botId string, token string, tokenType string) Chat {
+func NewChatBot(botId string, token string, tokenType string, apiEndpoint *string) Chat {
+	ep := ProductionEndpoint
+	if apiEndpoint != nil && *apiEndpoint != "" {
+		ep = *apiEndpoint
+	}
 	return Chat{
 		BotId:       botId,
 		Token:       token,
 		TokenType:   tokenType,
-		ApiEndpoint: ProductionEndpoint,
+		ApiEndpoint: ep,
 	}
 }
 
@@ -52,7 +32,7 @@ func (c *Chat) GetProfile(oneChatToken string) (Profile, error) {
 		OneChatToken: oneChatToken,
 	}
 	body, _ := json.Marshal(&msg)
-	r, err := c.send(http.MethodPost, "https://chat-api.one.th/manage/api/v1/getprofile", body)
+	r, err := c.send(http.MethodPost, c.url("/manage/api/v1/getprofile"), body)
 	if err != nil {
 		return Profile{}, err
 	}
@@ -75,7 +55,7 @@ func (c *Chat) FindFriend(keyword string) (Friend, error) {
 		Keyword: keyword,
 	}
 	body, _ := json.Marshal(&msg)
-	r, err := c.send(http.MethodPost, c.url("/searchfriend"), body)
+	r, err := c.send(http.MethodPost, c.url("/message/api/v1/searchfriend"), body)
 	if err != nil {
 		return Friend{}, err
 	}
@@ -87,6 +67,27 @@ func (c *Chat) FindFriend(keyword string) (Friend, error) {
 		return Friend{}, err
 	}
 	return chatFriendResult.Friend, nil
+}
+
+func (c *Chat) GetOneChatAccessToken(oneChatToken string) (string, error) {
+	msg := struct {
+		OneChatToken string `json:"onechat_token"`
+	}{
+		OneChatToken: oneChatToken,
+	}
+	body, _ := json.Marshal(&msg)
+	r, err := c.sendWithCustomToken(http.MethodPost, c.url("/event/api/v1/accesstoken_by_onechattoken"), body, "")
+	if err != nil {
+		return "", err
+	}
+	result := struct {
+		AccessToken string `json:"access_token"`
+		Status      string `json:"status"`
+	}{}
+	if err := json.Unmarshal(r.Body, &result); err != nil {
+		return "", err
+	}
+	return result.AccessToken, nil
 }
 
 func (c *Chat) PushTextMessage(to string, msg string, customNotify *string) error {
@@ -106,24 +107,11 @@ func (c *Chat) PushTextMessage(to string, msg string, customNotify *string) erro
 		pushMessage.CustomNotify = *customNotify
 	}
 	body, _ := json.Marshal(&pushMessage)
-	_, err := c.send(http.MethodPost, c.url("/push_message"), body)
+	_, err := c.send(http.MethodPost, c.url("/message/api/v1/push_message"), body)
 	return err
 }
 
-func (c *Chat) PushWebView(to string, label string, title string, detail string, path string, img string, customNotify *string) error {
-	type Choice struct {
-		Label        string `json:"label"`
-		Type         string `json:"type"`
-		Url          string `json:"url"`
-		Size         string `json:"size"`
-		OneChatToken string `json:"onechat_token"`
-	}
-	type Elements struct {
-		Image   string   `json:"image"`
-		Title   string   `json:"title"`
-		Detail  string   `json:"detail"`
-		Choices []Choice `json:"choice"`
-	}
+func (c *Chat) PushWebView(to string, title string, detail string, img string, choices []Choice, customNotify *string) error {
 	pushMessage := struct {
 		To           string     `json:"to"`
 		BotId        string     `json:"bot_id"`
@@ -136,18 +124,10 @@ func (c *Chat) PushWebView(to string, label string, title string, detail string,
 		Type:  "template",
 		Elements: []Elements{
 			{
-				Image:  img,
-				Title:  title,
-				Detail: detail,
-				Choices: []Choice{
-					{
-						Label:        label,
-						Type:         "webview",
-						Url:          path,
-						Size:         "full",
-						OneChatToken: "true",
-					},
-				},
+				Image:   img,
+				Title:   title,
+				Detail:  detail,
+				Choices: choices,
 			},
 		},
 	}
@@ -156,7 +136,7 @@ func (c *Chat) PushWebView(to string, label string, title string, detail string,
 		pushMessage.CustomNotify = *customNotify
 	}
 	body, _ := json.Marshal(&pushMessage)
-	r, err := c.send(http.MethodPost, c.url("/push_message"), body)
+	r, err := c.send(http.MethodPost, c.url("/message/api/v1/push_message"), body)
 	if err != nil {
 		return err
 	}
@@ -166,19 +146,7 @@ func (c *Chat) PushWebView(to string, label string, title string, detail string,
 	return nil
 }
 
-func (c *Chat) PushLinkTemplate(to string, label string, title string, detail string, path string, img string, customNotify *string) error {
-	type Choice struct {
-		Label        string `json:"label"`
-		Type         string `json:"type"`
-		Url          string `json:"url"`
-		OneChatToken string `json:"onechat_token"`
-	}
-	type Elements struct {
-		Image   string   `json:"image"`
-		Title   string   `json:"title"`
-		Detail  string   `json:"detail"`
-		Choices []Choice `json:"choice"`
-	}
+func (c *Chat) PushLinkTemplate(to string, title string, detail string, img string, choices []Choice, customNotify *string) error {
 	pushMessage := struct {
 		To           string     `json:"to"`
 		BotId        string     `json:"bot_id"`
@@ -191,17 +159,10 @@ func (c *Chat) PushLinkTemplate(to string, label string, title string, detail st
 		Type:  "template",
 		Elements: []Elements{
 			{
-				Image:  img,
-				Title:  title,
-				Detail: detail,
-				Choices: []Choice{
-					{
-						Label:        label,
-						Type:         "link",
-						Url:          path,
-						OneChatToken: "true",
-					},
-				},
+				Image:   img,
+				Title:   title,
+				Detail:  detail,
+				Choices: choices,
 			},
 		},
 	}
@@ -210,7 +171,49 @@ func (c *Chat) PushLinkTemplate(to string, label string, title string, detail st
 		pushMessage.CustomNotify = *customNotify
 	}
 	body, _ := json.Marshal(&pushMessage)
-	r, err := c.send(http.MethodPost, c.url("/push_message"), body)
+	r, err := c.send(http.MethodPost, c.url("/message/api/v1/push_message"), body)
+	if err != nil {
+		return err
+	}
+	if r.Code != 200 {
+		return errors.New(fmt.Sprintf("server return error with http code %d : %s", r.Code, string(r.Body)))
+	}
+	return nil
+}
+
+func (c *Chat) GetSharedToken(oneChatToken string) (string, error) {
+	msg := struct {
+		OneChatToken string `json:"onechat_token"`
+	}{
+		OneChatToken: oneChatToken,
+	}
+	body, _ := json.Marshal(&msg)
+	r, err := c.send(http.MethodPost, c.url("/event/api/v1/sharedtoken_by_onechattoken"), body)
+	if err != nil {
+		return "", err
+	}
+	result := struct {
+		Data struct {
+			SharedToken string `json:"shared_token"`
+		} `json:"data"`
+		Status string `json:"status"`
+	}{}
+	if err := json.Unmarshal(r.Body, &result); err != nil {
+		return "", err
+	}
+	return result.Data.SharedToken, nil
+}
+
+func (c *Chat) CloseWebView(to string) error {
+	pushBody := struct {
+		UserId string `json:"user_id"`
+		BotId  string `json:"bot_id"`
+	}{
+		UserId: to,
+		BotId:  c.BotId,
+	}
+	body, _ := json.Marshal(&pushBody)
+	r, err := c.send(http.MethodPost, c.url("/message/api/v2/disable_webview"), body)
 	if err != nil {
 		return err
 	}
@@ -221,9 +224,15 @@ func (c *Chat) PushLinkTemplate(to string, label string, title string, detail st
 }
 
 func (c *Chat) send(method string, url string, body []byte) (requests.Response, error) {
+	return c.sendWithCustomToken(method, url, body, c.Token)
+}
+
+func (c *Chat) sendWithCustomToken(method string, url string, body []byte, token string) (requests.Response, error) {
 	headers := map[string]string{
-		httputil.HeaderContentType:   "application/json",
-		httputil.HeaderAuthorization: fmt.Sprintf("%s %s", c.TokenType, c.Token),
+		httputil.HeaderContentType: "application/json",
+	}
+	if token != "" {
+		headers[httputil.HeaderAuthorization] = fmt.Sprintf("%s %s", c.TokenType, token)
 	}
 	r, err := requests.Request(method, url, headers, bytes.NewBuffer(body), 0)
 	if err != nil {

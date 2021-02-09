@@ -3,7 +3,13 @@ package crypto
 import (
 	"golang.org/x/crypto/bcrypt"
 	"math/rand"
+	"time"
 )
+
+// Random function need to generate random seed
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func GenSecretString(n int) string {
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -19,11 +25,12 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
-func CheckPasswordHash(password, hash string) bool {
+func ComparePasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
 
+// TODO: How to use
 func ValidateString(p string, v []func(rune) bool) bool {
 	for _, testRune := range v {
 		found := false

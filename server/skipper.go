@@ -11,15 +11,21 @@ type SkipperPath struct {
 }
 
 func (s *SkipperPath) Add(path string, method string) {
+	if s.Prefix != "" {
+		path = fmt.Sprintf("%s%s", s.Prefix, path)
+	}
 	s.Paths[s.key(path, method)] = true
 }
 
 func (s *SkipperPath) Delete(path string, method string) {
+	if s.Prefix != "" {
+		path = fmt.Sprintf("%s%s", s.Prefix, path)
+	}
 	delete(s.Paths, s.key(path, method))
 }
 
 func (s *SkipperPath) key(path string, method string) string {
-	return fmt.Sprintf("%s%s", method, path)
+	return fmt.Sprintf("%s|%s", method, path)
 }
 
 func (s *SkipperPath) Test(c echo.Context) bool {

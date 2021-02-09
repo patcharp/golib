@@ -8,19 +8,19 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/patcharp/golib/log"
+	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
-	Host        string
-	Port        string
-	Username    string
-	Password    string
-	Name        string
-	Prod        bool
-	PackageName string
-	Filename    string
-	SSLEnabled  bool
+	Host       string
+	Port       string
+	Username   string
+	Password   string
+	Name       string
+	DebugMode  bool
+	Filename   string
+	SSLEnabled bool
+	Charset    string
 }
 
 type Database struct {
@@ -36,6 +36,8 @@ const (
 	DriverMySQL    = "mysql"
 	DriverSQLLite  = "sqlite3"
 	DriverPostgres = "postgres"
+
+	DefaultMySQLCharset = "utf8mb4"
 )
 
 var dbContext []*gorm.DB
@@ -44,7 +46,7 @@ func GetConnectionContext() []*gorm.DB {
 	return dbContext
 }
 
-func New(cfg Config, driver string) Database {
+func NewWithConfig(cfg Config, driver string) Database {
 	return Database{
 		config: cfg,
 		driver: driver,
@@ -53,15 +55,9 @@ func New(cfg Config, driver string) Database {
 
 func (db *Database) Connect() error {
 	var err error
-	var dsn string
-	var driver string
 	switch db.driver {
 	case DriverMSSQL:
-		driver = DriverMSSQL
-		if db.config.Port == "" {
-			db.config.Port = "3306"
-		}
-		dsn = fmt.Sprintf(
+		db.dsn = fmt.Sprintf(
 			"sqlserver://%s:%s@%s:%s?database=%s",
 			db.config.Username,
 			db.config.Password,
@@ -70,12 +66,11 @@ func (db *Database) Connect() error {
 			db.config.Name,
 		)
 	case DriverPostgres:
-		driver = DriverPostgres
 		sslMode := "disable"
 		if db.config.SSLEnabled {
 			sslMode = "enable"
 		}
-		dsn = fmt.Sprintf(
+		db.dsn = fmt.Sprintf(
 			"postgresql://%s@%s:%s/%s?sslmode=%s",
 			db.config.Username,
 			db.config.Host,
@@ -84,28 +79,30 @@ func (db *Database) Connect() error {
 			sslMode,
 		)
 	case DriverSQLLite:
-		driver = DriverSQLLite
-		dsn = db.config.Filename
+		db.dsn = db.config.Filename
 	default:
-		driver = DriverMySQL
-		dsn = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&loc=Local",
+		db.driver = DriverMySQL
+		if db.config.Charset == "" {
+			db.config.Charset = DefaultMySQLCharset
+		}
+		db.dsn = fmt.Sprintf(
+			"%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=true&loc=Local",
 			db.config.Username,
 			db.config.Password,
 			db.config.Host,
 			db.config.Port,
 			db.config.Name,
+			db.config.Charset,
 		)
 	}
-	db.dsn = dsn
-	db.ctx, err = gorm.Open(driver, db.dsn)
+	db.ctx, err = gorm.Open(db.driver, db.dsn)
 	if err != nil {
 		return err
 	}
+	db.ctx.LogMode(db.config.DebugMode)
 	if err := db.startKeepAlive(); err != nil {
 		return err
 	}
-	db.ctx.LogMode(!db.config.Prod)
 	dbContext = append(dbContext, db.ctx)
 	return nil
 }
@@ -134,15 +131,19 @@ func (db *Database) MigrateDatabase(tables []interface{}) error {
 	return tx.Commit().Error
 }
 
+func (db *Database) SetDebugMode(mode bool) {
+	db.ctx.LogMode(mode)
+}
+
 func (db *Database) startKeepAlive() error {
 	var err error
 	db.job, err = scheduler.Every(15).Seconds().Run(func() {
 		if err := db.ctx.DB().Ping(); err != nil {
-			log.Errorln(db.config.PackageName, err, "Database keepalive error")
+			logrus.Errorln("Database keep alive error ->", err)
 			if err := db.Reconnect(); err != nil {
-				log.Errorln(db.config.PackageName, err, "Trying to reconnect to database error")
+				logrus.Errorln("Trying to reconnect to database error ->", err)
 			} else {
-				log.Infoln(db.config.PackageName, "Database reconnect success.")
+				logrus.Infoln("Database reconnect success.")
 			}
 		}
 	})

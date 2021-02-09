@@ -1,11 +1,9 @@
 package util
 
 import (
-	log "github.com/sirupsen/logrus"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 	"unicode/utf8"
 )
 
@@ -14,10 +12,6 @@ func GetEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
-}
-
-func IsProduction() bool {
-	return GetEnv("SERVER_MODE", "dev") == "prod"
 }
 
 func AtoI(s string, v int) int {
@@ -43,12 +37,6 @@ func Contains(slice []string, item string) bool {
 	}
 	_, ok := set[item]
 	return ok
-}
-
-// Exit program with print elapsed time
-func ExitWithCode(startTime time.Time, code int) {
-	log.Infoln("Elapsed time", time.Since(startTime).Seconds(), "second(s).")
-	os.Exit(code)
 }
 
 // Real display width string - remove floating char
