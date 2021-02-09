@@ -1,6 +1,6 @@
 package server
 
-type ApiResult struct {
+type Result struct {
 	Error   interface{} `json:"error,omitempty"`
 	Message interface{} `json:"msg,omitempty"`
 	Data    interface{} `json:"data,omitempty"`

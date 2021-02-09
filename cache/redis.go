@@ -8,20 +8,21 @@ import (
 )
 
 type Config struct {
-	Host string
-	Port string
-	Db   int
+	Host     string
+	Port     string
+	Password string
+	Db       int
 }
 
 type Redis struct {
 	Client *redis.Client
 }
 
-func New(host string, port string, db int) Redis {
+func New(host string, port string, password string, db int) Redis {
 	return Redis{
 		Client: redis.NewClient(&redis.Options{
 			Addr:     fmt.Sprintf("%s:%s", host, port),
-			Password: "",
+			Password: password,
 			DB:       db,
 		}),
 	}
@@ -31,6 +32,7 @@ func NewWithCfg(cfg Config) Redis {
 	return New(
 		cfg.Host,
 		cfg.Port,
+		cfg.Password,
 		cfg.Db,
 	)
 }

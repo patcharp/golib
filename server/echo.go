@@ -9,6 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 )
@@ -35,7 +36,7 @@ func New(config Config) Server {
 	// Cr. https://echo.labstack.com/middleware/request-id
 	s.ctx.Use(middleware.RequestID())
 	// Cr. https://echo.labstack.com/middleware/secure
-	s.ctx.Use(middleware.Secure())
+	//s.ctx.Use(middleware.Secure())
 	s.ctx.HTTPErrorHandler = s.serverErrorHandler
 	listenAddr := fmt.Sprintf("%s:%s", s.config.Host, s.config.Port)
 	s.ctx.Server = &http.Server{
@@ -44,6 +45,14 @@ func New(config Config) Server {
 	}
 	if !s.config.Prod {
 		s.ctx.Use(s.logger())
+		NoCache(s.ctx.Server.Handler)
+	}
+	logger := log.New()
+	logger.SetOutput(os.Stderr)
+	if !s.config.Prod {
+		logger.SetLevel(log.DebugLevel)
+	} else {
+		logger.SetLevel(log.InfoLevel)
 	}
 	return s
 }

@@ -2,7 +2,9 @@ package imagik
 
 import (
 	"bytes"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/patcharp/golib/requests"
 	"image"
@@ -12,6 +14,7 @@ import (
 type Imagik struct {
 	Img      image.Image
 	MimeType string
+	Size     int
 }
 
 func (img *Imagik) LoadFromFile(filename string) error {
@@ -66,6 +69,14 @@ func (img *Imagik) ThumbnailAsFile(filename string, w int, h int) error {
 		return err
 	}
 	return nil
+}
+
+func (img *Imagik) ExportAsDataUrl() (string, error) {
+	var buf bytes.Buffer
+	if err := imaging.Encode(&buf, img.Img, imaging.JPEG, imaging.JPEGQuality(100)); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("data:%s;base64,%s", http.DetectContentType(buf.Bytes()), base64.StdEncoding.EncodeToString(buf.Bytes())), nil
 }
 
 func (img *Imagik) ExportAsByte() ([]byte, error) {
