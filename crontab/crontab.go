@@ -22,12 +22,20 @@ func (s *Service) Stop() {
 	}
 }
 
-func (s *Service) AddJob(spec string, cmd func()) (cron.EntryID, error) {
+func (s *Service) AddFunc(spec string, cmd func()) (cron.EntryID, error) {
 	return s.c.AddFunc(spec, cmd)
 }
 
-func (s *Service) RemoveJob(entryId cron.EntryID) {
-	s.c.Remove(entryId)
+func (s *Service) AddJob(spec string, cmd cron.Job) (cron.EntryID, error) {
+	return s.c.AddJob(spec, cmd)
+}
+
+func (s *Service) RemoveJob(entryId int) {
+	s.c.Remove(cron.EntryID(entryId))
+}
+
+func (s *Service) GetEntryJob(entryId int) cron.Entry {
+	return s.c.Entry(cron.EntryID(entryId))
 }
 
 func (s *Service) GetEntryJobs() []cron.Entry {

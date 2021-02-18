@@ -90,6 +90,24 @@ func (c *Chat) GetOneChatAccessToken(oneChatToken string) (string, error) {
 	return result.AccessToken, nil
 }
 
+func (c *Chat) PushBroadcastMessage(to []string, msg string) error {
+	if len(to) > 100 {
+		return errors.New("receiver should not more than 100 accounts")
+	}
+	pushMessage := struct {
+		To      []string `json:"to"`
+		BotId   string   `json:"bot_id"`
+		Message string   `json:"message"`
+	}{
+		To:      to,
+		BotId:   c.BotId,
+		Message: msg,
+	}
+	body, _ := json.Marshal(&pushMessage)
+	_, err := c.send(http.MethodPost, c.url("/bc_msg/api/v1/broadcast_group"), body)
+	return err
+}
+
 func (c *Chat) PushTextMessage(to string, msg string, customNotify *string) error {
 	pushMessage := struct {
 		To           string `json:"to"`
