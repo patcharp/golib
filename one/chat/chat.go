@@ -134,7 +134,11 @@ func (c *Chat) PushBroadcastFromByte(to []string, file []byte) error {
 	if err != nil {
 		return err
 	}
-	r, err := c.send(http.MethodPost, c.url("/bc_msg/api/v1/broadcast_group_file"), body.Bytes())
+	headers := map[string]string{
+		httputil.HeaderContentType:   writer.FormDataContentType(),
+		httputil.HeaderAuthorization: fmt.Sprintf("%s %s", c.TokenType, c.Token),
+	}
+	r, err := c.sendWithCustomHeader(http.MethodPost, c.url("/bc_msg/api/v1/broadcast_group_file"), body, headers)
 	if err != nil {
 		return err
 	}
@@ -289,17 +293,23 @@ func (c *Chat) CloseWebView(to string) error {
 }
 
 func (c *Chat) send(method string, url string, body []byte) (requests.Response, error) {
-	return c.sendWithCustomToken(method, url, body, c.Token)
+	headers := map[string]string{
+		httputil.HeaderContentType:   "application/json",
+		httputil.HeaderAuthorization: fmt.Sprintf("%s %s", c.TokenType, c.Token),
+	}
+	return c.sendWithCustomHeader(method, url, bytes.NewBuffer(body), headers)
 }
 
 func (c *Chat) sendWithCustomToken(method string, url string, body []byte, token string) (requests.Response, error) {
 	headers := map[string]string{
-		httputil.HeaderContentType: "application/json",
+		httputil.HeaderContentType:   "application/json",
+		httputil.HeaderAuthorization: fmt.Sprintf("%s %s", c.TokenType, token),
 	}
-	if token != "" {
-		headers[httputil.HeaderAuthorization] = fmt.Sprintf("%s %s", c.TokenType, token)
-	}
-	r, err := requests.Request(method, url, headers, bytes.NewBuffer(body), 0)
+	return c.sendWithCustomHeader(method, url, bytes.NewBuffer(body), headers)
+}
+
+func (c *Chat) sendWithCustomHeader(method string, url string, body io.Reader, headers map[string]string) (requests.Response, error) {
+	r, err := requests.Request(method, url, headers, body, 0)
 	if err != nil {
 		return r, err
 	}
