@@ -3,12 +3,15 @@ package chat
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/h2non/filetype"
 	"github.com/patcharp/golib/requests"
 	"github.com/patcharp/golib/util/httputil"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -112,31 +115,44 @@ func (c *Chat) PushBroadcastMessage(to []string, msg string) error {
 	_, err := c.send(http.MethodPost, c.url("/bc_msg/api/v1/broadcast_group"), body)
 	return err
 }
-
 func (c *Chat) PushBroadcastFromByte(to []string, file []byte) error {
-	fileBuff := &bytes.Buffer{}
+	fileBuff := bytes.Buffer{}
 	fileBuff.Write(file)
 	hash := sha256.New()
 	hash.Write(file)
+	kind, _ := filetype.Match(file)
+	filename := fmt.Sprintf("%s.%s", base64.URLEncoding.EncodeToString(hash.Sum(nil)), kind.Extension)
+	if err := ioutil.WriteFile(filename, file, 0644); err != nil {
+		return err
+	}
+	defer os.Remove(filename)
+	return c.PushBroadcastFromFile(to, filename)
+}
 
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("file", filepath.Base(fmt.Sprint(hash.Sum(nil))))
+func (c *Chat) PushBroadcastFromFile(to []string, filename string) error {
+	file, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(part, fileBuff)
+	defer file.Close()
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
 	_ = writer.WriteField("bot_id", c.BotId)
 	for _, account := range to {
 		_ = writer.WriteField("to", account)
 	}
+	part, err := writer.CreateFormFile("file", filepath.Base(filename))
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(part, file)
 	err = writer.Close()
 	if err != nil {
 		return err
 	}
 	headers := map[string]string{
-		httputil.HeaderContentType:   writer.FormDataContentType(),
 		httputil.HeaderAuthorization: fmt.Sprintf("%s %s", c.TokenType, c.Token),
+		httputil.HeaderContentType:   writer.FormDataContentType(),
 	}
 	r, err := c.sendWithCustomHeader(http.MethodPost, c.url("/bc_msg/api/v1/broadcast_group_file"), body, headers)
 	if err != nil {
@@ -146,17 +162,6 @@ func (c *Chat) PushBroadcastFromByte(to []string, file []byte) error {
 		return errors.New(fmt.Sprint("server return error status", string(r.Body)))
 	}
 	return nil
-}
-
-func (c *Chat) PushBroadcastFromFile(to []string, filename string) error {
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	fileBuff := &bytes.Buffer{}
-	_, err = io.Copy(fileBuff, file)
-	return c.PushBroadcastFromByte(to, fileBuff.Bytes())
 }
 
 func (c *Chat) PushTextMessage(to string, msg string, customNotify *string) error {
