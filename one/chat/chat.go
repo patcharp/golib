@@ -2,12 +2,17 @@ package chat
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/patcharp/golib/requests"
 	"github.com/patcharp/golib/util/httputil"
+	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 )
 
 func NewChatBot(botId string, token string, tokenType string, apiEndpoint *string) Chat {
@@ -106,6 +111,48 @@ func (c *Chat) PushBroadcastMessage(to []string, msg string) error {
 	body, _ := json.Marshal(&pushMessage)
 	_, err := c.send(http.MethodPost, c.url("/bc_msg/api/v1/broadcast_group"), body)
 	return err
+}
+
+func (c *Chat) PushBroadcastFromByte(to []string, file []byte) error {
+	fileBuff := &bytes.Buffer{}
+	fileBuff.Write(file)
+	hash := sha256.New()
+	hash.Write(file)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", filepath.Base(fmt.Sprint(hash.Sum(nil))))
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(part, fileBuff)
+	_ = writer.WriteField("bot_id", c.BotId)
+	for _, account := range to {
+		_ = writer.WriteField("to", account)
+	}
+	err = writer.Close()
+	if err != nil {
+		return err
+	}
+	r, err := c.send(http.MethodPost, c.url("/bc_msg/api/v1/broadcast_group_file"), body.Bytes())
+	if err != nil {
+		return err
+	}
+	if r.Code != http.StatusOK {
+		return errors.New(fmt.Sprint("server return error status", string(r.Body)))
+	}
+	return nil
+}
+
+func (c *Chat) PushBroadcastFromFile(to []string, filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	fileBuff := &bytes.Buffer{}
+	_, err = io.Copy(fileBuff, file)
+	return c.PushBroadcastFromByte(to, fileBuff.Bytes())
 }
 
 func (c *Chat) PushTextMessage(to string, msg string, customNotify *string) error {
