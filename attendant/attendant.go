@@ -1,10 +1,7 @@
 package attendant
 
 // AttendantEndpoint API Endpoint
-const (
-	pkgName            = "ATTENDANT"
-	DefaultApiEndpoint = "https://attendants.sdi.inet.co.th/3rd"
-)
+const DefaultApiEndpoint = "https://attendants.sdi.inet.co.th/3rd"
 
 // AttendantAPIResult struct
 type APIResult struct {

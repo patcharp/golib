@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo"
-	"github.com/patcharp/golib/log"
+	"github.com/labstack/echo/v4"
 	"github.com/patcharp/golib/requests"
 	"net/http"
 	"reflect"
@@ -21,8 +20,7 @@ func (client *Client) GetAccountByID(accountID string) (AccountProfile, error) {
 	}
 	dataByte, err := json.Marshal(data)
 	if err := json.Unmarshal(dataByte, &account); err != nil {
-		log.Errorln(pkgName, err, "Json unmarshall team member error")
-		return account, nil
+		return account, err
 	}
 	return account, nil
 }
@@ -34,7 +32,7 @@ func (client *Client) GetAvatarByID(accountID string) (string, []byte, error) {
 		echo.HeaderAuthorization: fmt.Sprintf("%s %s", client.tokenType, client.token),
 	}
 	uri := fmt.Sprintf("/accounts/%s/avatar", accountID)
-	r, err := requests.Get(client.url(uri), headers, bytes.NewBuffer(data), 30)
+	r, err := requests.Get(client.url(uri), headers, bytes.NewBuffer(data), 10)
 	if err != nil {
 		return "", nil, err
 	}
@@ -53,8 +51,7 @@ func (client *Client) GetTeamMemberByID(accountID string) ([]CompanyDetail, erro
 	}
 	dataByte, err := json.Marshal(data)
 	if err := json.Unmarshal(dataByte, &company); err != nil {
-		log.Errorln(pkgName, err, "Json unmarshall team member error")
-		return company, nil
+		return company, err
 	}
 	return company, nil
 }
@@ -68,8 +65,7 @@ func (client *Client) GetHeadByID(accountID string) ([]CompanyDetail, error) {
 	}
 	dataByte, err := json.Marshal(data)
 	if err := json.Unmarshal(dataByte, &company); err != nil {
-		log.Errorln(pkgName, err, "Json unmarshall team member error")
-		return company, nil
+		return company, err
 	}
 	return company, nil
 }
