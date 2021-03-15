@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/patcharp/golib/crypto"
 	"github.com/patcharp/golib/server"
+	"github.com/patcharp/golib/util"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"reflect"
@@ -65,6 +66,28 @@ func HttpNoContent(c echo.Context) error {
 }
 
 /**
+ * Blob
+ */
+func HttpBlob(c echo.Context, blob []byte) error {
+	return HttpBlobWithCode(c, blob, http.StatusOK)
+}
+
+func HttpBlobWithCode(c echo.Context, blob []byte, code int) error {
+	return c.Blob(code, http.DetectContentType(blob), blob)
+}
+
+/**
+ * Redirect
+ */
+func HttpRedirect(c echo.Context, url string) error {
+	return HttpRedirectWithCode(c, url, http.StatusFound)
+}
+
+func HttpRedirectWithCode(c echo.Context, url string, code int) error {
+	return c.Redirect(code, url)
+}
+
+/**
  * Client request
  */
 func HttpInvalidRequest(c echo.Context, code int, err error, msg interface{}) error {
@@ -72,15 +95,17 @@ func HttpInvalidRequest(c echo.Context, code int, err error, msg interface{}) er
 	errCode := crypto.GenSecretString(8)
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()
-	logrus.Errorln(fmt.Sprintf(
-		"[CLIENT%d] %s (%s):%d error #%s -> %v",
-		code,
-		funcName,
-		file,
-		line,
-		errCode,
-		err,
-	))
+	if util.GetEnv("HTTP_DEBUG", "false") == "true" {
+		logrus.Errorln(fmt.Sprintf(
+			"[CLIENT%d] %s (%s):%d error #%s -> %v",
+			code,
+			funcName,
+			file,
+			line,
+			errCode,
+			err,
+		))
+	}
 	return HttpResponse(c, code, server.Result{
 		Message: msg,
 		Error:   fmt.Sprintf("#%s: %v", errCode, err),
