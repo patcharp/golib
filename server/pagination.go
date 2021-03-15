@@ -12,21 +12,21 @@ const (
 )
 
 type Pagination struct {
-	Page uint
-	Size uint
+	Page int
+	Size int
 }
 
 func GetPagination(c echo.Context) Pagination {
 	var p Pagination
-	p.Page = uint(atoi(c.QueryParam("page"), DefaultQueryPage))
-	p.Size = uint(atoi(c.QueryParam("size"), DefaultQuerySize))
+	p.Page = atoi(c.QueryParam("page"), DefaultQueryPage)
+	p.Size = atoi(c.QueryParam("size"), DefaultQuerySize)
 	if p.Size > MaxQuerySize {
 		p.Size = MaxQuerySize
 	}
 	return p
 }
 
-func (p *Pagination) Offset() uint {
+func (p *Pagination) Offset() int {
 	return (p.Page - 1) * p.Size
 }
 

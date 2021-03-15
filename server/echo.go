@@ -6,6 +6,7 @@ import (
 	echoPrometheus "github.com/globocom/echo-prometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/patcharp/golib/util"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"net/http"
@@ -90,15 +91,18 @@ func (s *Server) EnableMetrics(metricsPath string, nameSpace string) error {
 }
 
 func (s *Server) EnableCORS(allowOrigins []string, allowHeaders []string) error {
+	defaultAllowHeaders := []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization}
 	if len(allowOrigins) == 0 {
 		allowOrigins = []string{"*"}
 	}
-	if len(allowHeaders) == 0 {
-		allowHeaders = []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAuthorization}
+	for _, h := range defaultAllowHeaders {
+		if !util.Contains(allowHeaders, h) {
+			allowHeaders = append(allowHeaders, h)
+		}
 	}
 	s.ctx.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: allowOrigins,
-		AllowHeaders: allowOrigins,
+		AllowHeaders: allowHeaders,
 	}))
 	return nil
 }

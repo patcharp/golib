@@ -40,7 +40,7 @@ func (c *Chat) GetProfile(oneChatToken string) (Profile, error) {
 		OneChatToken: oneChatToken,
 	}
 	body, _ := json.Marshal(&msg)
-	r, err := c.send(http.MethodPost, c.url("/manage/api/v1/getprofile"), body)
+	r, err := c.send(http.MethodPost, c.url("/go_api/api/v1/get-profile"), body)
 	if err != nil {
 		return Profile{}, err
 	}
