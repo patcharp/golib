@@ -33,6 +33,6 @@ func NewClient(token string, tokenType string) (Client, error) {
 	return attendant, nil
 }
 
-func (client *Client) SetApiEndpoint(ep string) {
-	client.apiEndpoint = ep
+func (c *Client) SetApiEndpoint(ep string) {
+	c.apiEndpoint = ep
 }

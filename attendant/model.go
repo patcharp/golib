@@ -1,5 +1,7 @@
 package attendant
 
+import uuid "github.com/satori/go.uuid"
+
 // EmployeeDetail struct
 type EmployeeDetail struct {
 	Company    string `json:"company"`
@@ -51,4 +53,21 @@ type CompanyDetail struct {
 type Companies struct {
 	Name  string `json:"name"`
 	TaxNo string `json:"tax_no"`
+}
+
+// StaffInfo struct
+type StaffInfo struct {
+	AccountId      string     `json:"account_id,omitempty"`
+	DepartmentUid  *uuid.UUID `json:"department_uid,omitempty"`
+	DepartmentName string     `json:"department_name,omitempty"`
+	TitleTH        string     `json:"title_th"`
+	FirstNameTH    string     `json:"first_name_th"`
+	LastNameTH     string     `json:"last_name_th"`
+	NickNameTH     string     `json:"nick_name_th"`
+	Email          string     `json:"email"`
+	EmployeeId     string     `json:"employee_id"`
+	Telephone      string     `json:"telephone"`
+	CompanyTaxNo   string     `json:"company_tax_no"`
+	CompanyName    string     `json:"company_name"`
+	Position       string     `json:"position"`
 }
