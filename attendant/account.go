@@ -12,9 +12,9 @@ import (
 )
 
 // GetAccountByID Get Account by ID API
-func (client *Client) GetAccountByID(accountID string) (AccountProfile, error) {
+func (c *Client) GetAccountByID(accountID string) (AccountProfile, error) {
 	var account AccountProfile
-	data, err := client.get(fmt.Sprintf("/accounts/%s", accountID))
+	data, err := c.get(fmt.Sprintf("/accounts/%s", accountID))
 	if err != nil {
 		return account, err
 	}
@@ -25,14 +25,14 @@ func (client *Client) GetAccountByID(accountID string) (AccountProfile, error) {
 	return account, nil
 }
 
-func (client *Client) GetAvatarByID(accountID string) (string, []byte, error) {
+func (c *Client) GetAvatarByID(accountID string) (string, []byte, error) {
 	var data []byte
 	headers := map[string]string{
 		echo.HeaderContentType:   "application/json",
-		echo.HeaderAuthorization: fmt.Sprintf("%s %s", client.tokenType, client.token),
+		echo.HeaderAuthorization: fmt.Sprintf("%s %s", c.tokenType, c.token),
 	}
 	uri := fmt.Sprintf("/accounts/%s/avatar", accountID)
-	r, err := requests.Get(client.url(uri), headers, bytes.NewBuffer(data), 10)
+	r, err := requests.Get(c.url(uri), headers, bytes.NewBuffer(data), 10)
 	if err != nil {
 		return "", nil, err
 	}
@@ -43,9 +43,9 @@ func (client *Client) GetAvatarByID(accountID string) (string, []byte, error) {
 }
 
 // GetTeamMemberByID Get Team Member by ID API
-func (client *Client) GetTeamMemberByID(accountID string) ([]CompanyDetail, error) {
+func (c *Client) GetTeamMemberByID(accountID string) ([]CompanyDetail, error) {
 	var company []CompanyDetail
-	data, err := client.get(fmt.Sprintf("/accounts/%s/teammember", accountID))
+	data, err := c.get(fmt.Sprintf("/accounts/%s/teammember", accountID))
 	if err != nil {
 		return company, err
 	}
@@ -57,9 +57,9 @@ func (client *Client) GetTeamMemberByID(accountID string) ([]CompanyDetail, erro
 }
 
 // GetHeadByID Get Head by ID API
-func (client *Client) GetHeadByID(accountID string) ([]CompanyDetail, error) {
+func (c *Client) GetHeadByID(accountID string) ([]CompanyDetail, error) {
 	var company []CompanyDetail
-	data, err := client.get(fmt.Sprintf("/accounts/%s/head", accountID))
+	data, err := c.get(fmt.Sprintf("/accounts/%s/head", accountID))
 	if err != nil {
 		return company, err
 	}
@@ -71,18 +71,18 @@ func (client *Client) GetHeadByID(accountID string) ([]CompanyDetail, error) {
 }
 
 // url Set URL Path
-func (client *Client) url(path string) string {
-	return fmt.Sprintf("%s%s", client.apiEndpoint, path)
+func (c *Client) url(path string) string {
+	return fmt.Sprintf("%s%s", c.apiEndpoint, path)
 }
 
 // get Get Data
-func (client *Client) get(uri string) (interface{}, error) {
+func (c *Client) get(uri string) (interface{}, error) {
 	var data []byte
 	headers := map[string]string{
 		echo.HeaderContentType:   "application/json",
-		echo.HeaderAuthorization: fmt.Sprintf("%s %s", client.tokenType, client.token),
+		echo.HeaderAuthorization: fmt.Sprintf("%s %s", c.tokenType, c.token),
 	}
-	r, err := requests.Get(client.url(uri), headers, bytes.NewBuffer(data), 30)
+	r, err := requests.Get(c.url(uri), headers, bytes.NewBuffer(data), 30)
 	if err != nil {
 		return nil, err
 	}
