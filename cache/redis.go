@@ -112,3 +112,11 @@ func (r *Redis) IsKeyNotFound(err error) bool {
 	}
 	return false
 }
+
+func (r *Redis) SetExpire(key string, expiration time.Duration) bool {
+	return r.Client.Expire(key, expiration).Val()
+}
+
+func (r *Redis) SetExpireAt(key string, expireAt time.Time) bool {
+	return r.Client.ExpireAt(key, expireAt).Val()
+}
