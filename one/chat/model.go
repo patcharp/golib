@@ -26,6 +26,7 @@ type Profile struct {
 	Email          string `json:"email"`
 	Nickname       string `json:"nickname"`
 	AccountId      string `json:"one_id"`
+	Telephone      string `json:"telephone"`
 	ProfilePicture string `json:"profilepicture"`
 }
 
