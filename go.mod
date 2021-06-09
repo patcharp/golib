@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/Luzifer/go-openssl/v4 v4.1.0
+	github.com/afiskon/promtail-client v0.0.0-20190305142237-506f3f921e9c
 	github.com/carlescere/scheduler v0.0.0-20170109141437-ee74d2f83d82
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/disintegration/imaging v1.6.2
@@ -26,5 +27,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.7.0
+	github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 )
