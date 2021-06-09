@@ -9,7 +9,7 @@ import (
 // Model struct
 type Model struct {
 	Seq       int64      `json:"seq" gorm:"primary_key;auto_increment:false;" sql:"index"`
-	Uid       uuid.UUID  `json:"uid" gorm:"primary_key"`
+	Uid       uuid.UUID  `json:"uid" gorm:"primary_key" sql:"index"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at" sql:"index"`
