@@ -255,6 +255,28 @@ func (c *Chat) PushLinkTemplate(to string, title string, detail string, img stri
 	return nil
 }
 
+func (c *Chat) PushQuickReplyTextType(to string, message string, quickReplies []QuickReplyTextType) error {
+	body, _ := json.Marshal(&struct {
+		To         string               `json:"to"`
+		BotId      string               `json:"bot_id"`
+		Message    string               `json:"message"`
+		QuickReply []QuickReplyTextType `json:"quick_reply"`
+	}{
+		To:         to,
+		BotId:      c.BotId,
+		Message:    message,
+		QuickReply: quickReplies,
+	})
+	resp, err := c.send(http.MethodPost, c.url("/message/api/v1/push_quickreply"), body)
+	if err != nil {
+		return err
+	}
+	if resp.Code != http.StatusOK {
+		return errors.New(fmt.Sprintln("OneChat server return not ok code", resp.Code, string(resp.Body)))
+	}
+	return nil
+}
+
 func (c *Chat) GetSharedToken(oneChatToken string) (string, error) {
 	msg := struct {
 		OneChatToken string `json:"onechat_token"`
