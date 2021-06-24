@@ -78,3 +78,10 @@ type Elements struct {
 	Detail  string   `json:"detail"`
 	Choices []Choice `json:"choice"`
 }
+
+type QuickReplyTextType struct {
+	Label   string `json:"label"`
+	Type    string `json:"type"`
+	Message string `json:"message"`
+	Payload string `json:"payload"`
+}
