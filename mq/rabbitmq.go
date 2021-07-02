@@ -2,7 +2,9 @@ package mq
 
 import (
 	"fmt"
+	"github.com/carlescere/scheduler"
 	"github.com/patcharp/golib/util/httputil"
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"time"
 )
@@ -21,6 +23,7 @@ type Client struct {
 	Ctx     *amqp.Connection
 	Channel *amqp.Channel
 	Queue   amqp.Queue
+	job     *scheduler.Job
 }
 
 func NewMQ(cfg Config) Client {
@@ -61,23 +64,27 @@ func (c *Client) Connect(qName string) error {
 	if err != nil {
 		return err
 	}
+	if err := c.startKeepAlive(qName); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (c *Client) Close() error {
-	if !c.Ctx.IsClosed() {
+	if c.Ctx != nil && !c.Ctx.IsClosed() {
 		return c.Ctx.Close()
 	}
+	_ = c.stopKeepAlive()
 	return nil
 }
 
 func (c *Client) EnQueue(key string, queueId string, exchange *string, data []byte) error {
-	exchCfg := ""
+	exchangeCfg := ""
 	if exchange != nil {
-		exchCfg = *exchange
+		exchangeCfg = *exchange
 	}
 	return c.Channel.Publish(
-		exchCfg,      // exchange
+		exchangeCfg,  // exchange
 		c.Queue.Name, // routing key
 		false,        // mandatory
 		false,
@@ -90,4 +97,26 @@ func (c *Client) EnQueue(key string, queueId string, exchange *string, data []by
 			AppId:        key,
 		},
 	)
+}
+
+func (c *Client) startKeepAlive(qName string) error {
+	var err error
+	c.job, err = scheduler.Every(15).Seconds().Run(func() {
+		if c.Ctx == nil || (c.Ctx != nil && c.Ctx.IsClosed()) {
+			logrus.Errorln("MQ keep alive error ->", err)
+			if err := c.Connect(qName); err != nil {
+				logrus.Errorln("Trying to reconnect to MQ error ->", err)
+			} else {
+				logrus.Infoln("MQ reconnect success.")
+			}
+		}
+	})
+	return err
+}
+
+func (c *Client) stopKeepAlive() error {
+	if c.job != nil {
+		c.job.Quit <- true
+	}
+	return nil
 }
