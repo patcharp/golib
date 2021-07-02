@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/tls"
-	"github.com/labstack/echo"
+	"github.com/patcharp/golib/util/httputil"
 	"io"
 	"net/http"
 	"time"
@@ -35,6 +35,6 @@ func UrlGrabber(url string, headers map[string]string, b *[]byte, mimeType *stri
 	buf := new(bytes.Buffer)
 	_, _ = buf.ReadFrom(resp.Body)
 	*b = buf.Bytes()
-	*mimeType = resp.Header.Get(echo.HeaderContentType)
+	*mimeType = resp.Header.Get(httputil.HeaderContentType)
 	return resp.Body.Close()
 }
