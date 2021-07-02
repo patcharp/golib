@@ -58,6 +58,7 @@ const (
 	HeaderXRealIP             = "X-Real-IP"
 	HeaderXRequestID          = "X-Request-ID"
 	HeaderXRequestedWith      = "X-Requested-With"
+	HeaderXApiKey             = "X-API-Key"
 	HeaderServer              = "Server"
 	HeaderOrigin              = "Origin"
 
