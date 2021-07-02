@@ -37,3 +37,5 @@ Thumbs.db
 # test docker
 docker-compose.yml
 *.json
+
+/cmd

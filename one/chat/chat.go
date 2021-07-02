@@ -54,6 +54,26 @@ func (c *Chat) GetProfile(oneChatToken string) (Profile, error) {
 	return chatProfileResult.Data, nil
 }
 
+func (c *Chat) GetFriendList() ([]Friend, error) {
+	body, _ := json.Marshal(&struct {
+		BotId string `json:"bot_id"`
+	}{
+		BotId: c.BotId,
+	})
+	r, err := c.send(http.MethodPost, c.url("/manage/api/v1/getlistroom"), body)
+	if err != nil {
+		return nil, err
+	}
+	if r.Code != http.StatusOK {
+		return nil, errors.New(fmt.Sprint("OneChat return code", r.Code, string(r.Body)))
+	}
+	var fiendList FriendList
+	if err := json.Unmarshal(r.Body, &fiendList); err != nil {
+		return nil, err
+	}
+	return fiendList.ListFriend, nil
+}
+
 func (c *Chat) FindFriend(keyword string) (Friend, error) {
 	msg := struct {
 		BotId   string `json:"bot_id"`

@@ -14,12 +14,27 @@ type Chat struct {
 	ApiEndpoint string
 }
 
+type FriendList struct {
+	Status                string        `json:"status"`
+	ListRequestFriend     []interface{} `json:"list_request_friend"`
+	ListFriend            []Friend      `json:"list_friend"`
+	ListSendRequestFriend []interface{} `json:"list_send_request_friend"`
+	ListGroup             []Group       `json:"list_group"`
+}
+
 type Friend struct {
 	OneEmail    string `json:"one_email"`
 	UserId      string `json:"user_id"`
 	AccountId   string `json:"one_id"`
 	DisplayName string `json:"display_name"`
 	Type        string `json:"type"`
+}
+
+type Group struct {
+	IsActive  string `json:"is_active"`
+	GroupId   string `json:"group_id"`
+	Type      string `json:"type"`
+	GroupName string `json:"group_name"`
 }
 
 type Profile struct {

@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
 	"github.com/patcharp/golib/requests"
+	"github.com/patcharp/golib/util/httputil"
 	"net/http"
 )
 
@@ -39,7 +39,7 @@ func (c *Client) Login(username string, password string, profile bool) (Authenti
 		Password:     password,
 	})
 	headers := map[string]string{
-		echo.HeaderContentType: "application/json",
+		httputil.HeaderContentType: httputil.MIMEApplicationJSON,
 	}
 	r, err := requests.Post(c.url("/api/oauth/getpwd"), headers, bytes.NewBuffer(body), MaxTimeOut)
 	if err != nil {
@@ -77,7 +77,7 @@ func (c *Client) RefreshNewToken(refreshToken string) (AuthenticationResult, err
 		RefreshToken: refreshToken,
 	})
 	headers := map[string]string{
-		echo.HeaderContentType: "application/json",
+		httputil.HeaderContentType: httputil.MIMEApplicationJSON,
 	}
 	resp, err := requests.Post(c.url("/api/oauth/get_refresh_token"), headers, bytes.NewBuffer(body), MaxTimeOut)
 	if err != nil {
@@ -113,7 +113,7 @@ func (c *Client) VerifyAuthorizedCode(authCode string, profile bool) (Authentica
 		RedirectUri:  c.RedirectUrl,
 	})
 	headers := map[string]string{
-		echo.HeaderContentType: "application/json",
+		httputil.HeaderContentType: httputil.MIMEApplicationJSON,
 	}
 	if err != nil {
 		return result, err
@@ -155,7 +155,7 @@ func (c *Client) LoginWithScope(username string, password string, profile bool, 
 		Scope:        scope,
 	})
 	headers := map[string]string{
-		echo.HeaderContentType: "application/json",
+		httputil.HeaderContentType: httputil.MIMEApplicationJSON,
 	}
 	r, err := requests.Post(c.url("/api/oauth/getpwd"), headers, bytes.NewBuffer(body), MaxTimeOut)
 	if err != nil {
@@ -182,7 +182,7 @@ func (c *Client) GetProfile(tokenType string, accessToken string) (AccountProfil
 		return profile, errors.New("login required")
 	}
 	headers := map[string]string{
-		echo.HeaderAuthorization: fmt.Sprintf("%s %s", tokenType, accessToken),
+		httputil.HeaderAuthorization: fmt.Sprintf("%s %s", tokenType, accessToken),
 	}
 	rawResponse, err := requests.Get(c.url("/api/account"), headers, nil, MaxTimeOut)
 	if err != nil {

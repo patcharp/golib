@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
 )
 
 type SkipperPath struct {
@@ -28,8 +28,8 @@ func (s *SkipperPath) key(path string, method string) string {
 	return fmt.Sprintf("%s|%s", method, path)
 }
 
-func (s *SkipperPath) Test(c echo.Context) bool {
-	if active, ok := s.Paths[s.key(c.Path(), c.Request().Method)]; ok && active {
+func (s *SkipperPath) Test(ctx *fiber.Ctx) bool {
+	if active, ok := s.Paths[s.key(ctx.Path(), ctx.Method())]; ok && active {
 		return true
 	}
 	return false

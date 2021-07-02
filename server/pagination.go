@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
 	"strconv"
 )
 
@@ -16,10 +16,10 @@ type Pagination struct {
 	Size int
 }
 
-func GetPagination(c echo.Context) Pagination {
+func GetPagination(ctx *fiber.Ctx) Pagination {
 	var p Pagination
-	p.Page = atoi(c.QueryParam("page"), DefaultQueryPage)
-	p.Size = atoi(c.QueryParam("size"), DefaultQuerySize)
+	p.Page = atoi(ctx.Query("page"), DefaultQueryPage)
+	p.Size = atoi(ctx.Query("size"), DefaultQuerySize)
 	if p.Size > MaxQuerySize {
 		p.Size = MaxQuerySize
 	}
