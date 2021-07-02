@@ -2,7 +2,7 @@ package helper
 
 import (
 	"fmt"
-	"github.com/labstack/echo/v4"
+	"github.com/gofiber/fiber/v2"
 	"github.com/patcharp/golib/crypto"
 	"github.com/patcharp/golib/server"
 	"github.com/patcharp/golib/util"
@@ -15,19 +15,19 @@ import (
 /**
  * General response
  */
-func HttpResponse(c echo.Context, code int, result server.Result) error {
-	return c.JSON(code, result)
+func HttpResponse(ctx *fiber.Ctx, code int, result server.Result) error {
+	return ctx.Status(code).JSON(result)
 }
 
 // 200
-func HttpOk(c echo.Context, data interface{}) error {
+func HttpOk(ctx *fiber.Ctx, data interface{}) error {
 	count := 0
 	if data != nil {
 		if reflect.TypeOf(data).Kind() == reflect.Slice {
 			count = reflect.ValueOf(data).Len()
 		}
 	}
-	return c.JSON(http.StatusOK, server.Result{
+	return ctx.JSON(server.Result{
 		Message: "success",
 		Data:    data,
 		Count:   count,
@@ -35,14 +35,14 @@ func HttpOk(c echo.Context, data interface{}) error {
 }
 
 // 200
-func HttpOkWithTotal(c echo.Context, data interface{}, total int) error {
+func HttpOkWithTotal(ctx *fiber.Ctx, data interface{}, total int) error {
 	count := 0
 	if data != nil {
 		if reflect.TypeOf(data).Kind() == reflect.Slice {
 			count = reflect.ValueOf(data).Len()
 		}
 	}
-	return c.JSON(http.StatusOK, server.Result{
+	return ctx.JSON(server.Result{
 		Message: "success",
 		Data:    data,
 		Total:   total,
@@ -51,16 +51,16 @@ func HttpOkWithTotal(c echo.Context, data interface{}, total int) error {
 }
 
 // 201
-func HttpCreated(c echo.Context, data interface{}) error {
-	return HttpResponse(c, http.StatusCreated, server.Result{
+func HttpCreated(ctx *fiber.Ctx, data interface{}) error {
+	return HttpResponse(ctx, http.StatusCreated, server.Result{
 		Message: "success",
 		Data:    data,
 	})
 }
 
 // 204
-func HttpNoContent(c echo.Context) error {
-	return HttpResponse(c, http.StatusNoContent, server.Result{
+func HttpNoContent(ctx *fiber.Ctx) error {
+	return HttpResponse(ctx, http.StatusNoContent, server.Result{
 		Message: "success",
 	})
 }
@@ -68,29 +68,30 @@ func HttpNoContent(c echo.Context) error {
 /**
  * Blob
  */
-func HttpBlob(c echo.Context, blob []byte) error {
-	return HttpBlobWithCode(c, blob, http.StatusOK)
+func HttpBlob(ctx *fiber.Ctx, blob []byte) error {
+	return HttpBlobWithCode(ctx, blob, http.StatusOK)
 }
 
-func HttpBlobWithCode(c echo.Context, blob []byte, code int) error {
-	return c.Blob(code, http.DetectContentType(blob), blob)
+func HttpBlobWithCode(ctx *fiber.Ctx, blob []byte, code int) error {
+	// http.DetectContentType(blob)
+	return ctx.Status(code).Send(blob)
 }
 
 /**
  * Redirect
  */
-func HttpRedirect(c echo.Context, url string) error {
-	return HttpRedirectWithCode(c, url, http.StatusFound)
+func HttpRedirect(ctx *fiber.Ctx, url string) error {
+	return HttpRedirectWithCode(ctx, url, http.StatusFound)
 }
 
-func HttpRedirectWithCode(c echo.Context, url string, code int) error {
-	return c.Redirect(code, url)
+func HttpRedirectWithCode(ctx *fiber.Ctx, url string, code int) error {
+	return ctx.Status(code).Redirect(url)
 }
 
 /**
  * Client request
  */
-func HttpInvalidRequest(c echo.Context, code int, err error, msg interface{}) error {
+func HttpInvalidRequest(ctx *fiber.Ctx, code int, err error, msg interface{}) error {
 	// TODO: Generate error code from error and return error code to frontend
 	errCode := crypto.GenSecretString(8)
 	pc, file, line, _ := runtime.Caller(2)
@@ -106,41 +107,41 @@ func HttpInvalidRequest(c echo.Context, code int, err error, msg interface{}) er
 			err,
 		))
 	}
-	return HttpResponse(c, code, server.Result{
+	return HttpResponse(ctx, code, server.Result{
 		Message: msg,
 		Error:   fmt.Sprintf("#%s: %v", errCode, err),
 	})
 }
 
 // 400
-func HttpErrBadRequest(c echo.Context) error {
-	return HttpInvalidRequest(c, http.StatusBadRequest, nil, "invalid request")
+func HttpErrBadRequest(ctx *fiber.Ctx) error {
+	return HttpInvalidRequest(ctx, http.StatusBadRequest, nil, "invalid request")
 }
 
 // 401
-func HttpErrUnAuthorize(c echo.Context, err error) error {
-	return HttpInvalidRequest(c, http.StatusUnauthorized, err, "unauthorized")
+func HttpErrUnAuthorize(ctx *fiber.Ctx, err error) error {
+	return HttpInvalidRequest(ctx, http.StatusUnauthorized, err, "unauthorized")
 }
 
 // 403
-func HttpErrForbidden(c echo.Context) error {
-	return HttpInvalidRequest(c, http.StatusForbidden, nil, "forbidden")
+func HttpErrForbidden(ctx *fiber.Ctx) error {
+	return HttpInvalidRequest(ctx, http.StatusForbidden, nil, "forbidden")
 }
 
 // 404
-func HttpErrNotFound(c echo.Context) error {
-	return HttpInvalidRequest(c, http.StatusNotFound, nil, "request not found")
+func HttpErrNotFound(ctx *fiber.Ctx) error {
+	return HttpInvalidRequest(ctx, http.StatusNotFound, nil, "request not found")
 }
 
 // 409
-func HttpErrConflict(c echo.Context) error {
-	return HttpInvalidRequest(c, http.StatusConflict, nil, "requested was conflict")
+func HttpErrConflict(ctx *fiber.Ctx) error {
+	return HttpInvalidRequest(ctx, http.StatusConflict, nil, "requested was conflict")
 }
 
 /**
  * Server error
  */
-func HttpServerError(c echo.Context, code int, err error, msg interface{}) error {
+func HttpServerError(ctx *fiber.Ctx, code int, err error, msg interface{}) error {
 	// TODO: Generate error code from error and return error code to frontend
 	errCode := crypto.GenSecretString(8)
 	pc, file, line, _ := runtime.Caller(2)
@@ -154,18 +155,18 @@ func HttpServerError(c echo.Context, code int, err error, msg interface{}) error
 		errCode,
 		err,
 	))
-	return HttpResponse(c, code, server.Result{
+	return HttpResponse(ctx, code, server.Result{
 		Message: msg,
 		Error:   fmt.Sprintf("#%s: %v", errCode, err),
 	})
 }
 
 // 500
-func HttpErrServerError(c echo.Context, err error, msg interface{}) error {
-	return HttpServerError(c, http.StatusInternalServerError, err, "server error")
+func HttpErrServerError(ctx *fiber.Ctx, err error, msg interface{}) error {
+	return HttpServerError(ctx, http.StatusInternalServerError, err, "server error")
 }
 
 // 503
-func HttpServiceUnavailableError(c echo.Context, err error, msg interface{}) error {
-	return HttpServerError(c, http.StatusServiceUnavailable, err, "destination service unavailable")
+func HttpServiceUnavailableError(ctx *fiber.Ctx, err error, msg interface{}) error {
+	return HttpServerError(ctx, http.StatusServiceUnavailable, err, "destination service unavailable")
 }
