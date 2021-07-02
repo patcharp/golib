@@ -1,30 +1,27 @@
 package database
 
 import (
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
+	"gorm.io/gorm"
 	"time"
 )
 
 // Model struct
 type Model struct {
-	Seq       int64      `json:"seq" gorm:"primary_key;auto_increment:false;" sql:"index"`
-	Uid       uuid.UUID  `json:"uid" gorm:"primary_key" sql:"index"`
-	CreatedAt time.Time  `json:"created_at"`
+	Seq       int64      `json:"seq" gorm:"primary_key;auto_increment:false;index" sql:"index"`
+	Uid       uuid.UUID  `json:"uid" gorm:"primary_key;index" sql:"index"`
+	CreatedAt time.Time  `json:"created_at" gorm:"index" sql:"index"`
 	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at" sql:"index"`
+	DeletedAt *time.Time `json:"deleted_at" gorm:"index" sql:"index"`
 }
 
 // BeforeCreate hook table
-func (m *Model) BeforeCreate(scope *gorm.Scope) error {
-	if f, ok := scope.FieldByName("uid"); ok {
-		if f.IsBlank {
-			if err := scope.SetColumn("uid", uuid.NewV4()); err != nil {
-				return err
-			}
-		}
+func (m *Model) BeforeCreate(tx *gorm.DB) error {
+	if uuid.Equal(m.Uid, uuid.Nil) {
+		m.Uid = uuid.NewV4()
 	}
-	return scope.SetColumn("seq", time.Now().UnixNano())
+	m.Seq = time.Now().UnixNano()
+	return nil
 }
 
 // Preload

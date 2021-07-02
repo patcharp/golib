@@ -1,14 +1,15 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/carlescere/scheduler"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/mssql"
-	_ "github.com/jinzhu/gorm/dialects/mysql"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.com/sirupsen/logrus"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/driver/sqlserver"
+	"gorm.io/gorm"
 )
 
 type Config struct {
@@ -24,11 +25,13 @@ type Config struct {
 }
 
 type Database struct {
-	config Config
-	driver string
-	dsn    string
-	ctx    *gorm.DB
-	job    *scheduler.Job
+	config     Config
+	driver     string
+	dsn        string
+	ctx        *gorm.DB
+	sql        *sql.DB
+	gormConfig gorm.Config
+	job        *scheduler.Job
 }
 
 const (
@@ -40,12 +43,6 @@ const (
 	DefaultMySQLCharset = "utf8mb4"
 )
 
-var dbContext []*gorm.DB
-
-func GetConnectionContext() []*gorm.DB {
-	return dbContext
-}
-
 func NewWithConfig(cfg Config, driver string) Database {
 	return Database{
 		config: cfg,
@@ -54,6 +51,12 @@ func NewWithConfig(cfg Config, driver string) Database {
 }
 
 func (db *Database) Connect() error {
+	return db.ConnectWithGormConfig(gorm.Config{})
+}
+
+func (db *Database) ConnectWithGormConfig(gormCfg gorm.Config) error {
+	_ = db.stopKeepAlive()
+	db.gormConfig = gormCfg
 	var err error
 	switch db.driver {
 	case DriverMSSQL:
@@ -65,6 +68,7 @@ func (db *Database) Connect() error {
 			db.config.Port,
 			db.config.Name,
 		)
+		db.ctx, err = gorm.Open(sqlserver.Open(db.dsn), &gormCfg)
 	case DriverPostgres:
 		sslMode := "disable"
 		if db.config.SSLEnabled {
@@ -78,8 +82,10 @@ func (db *Database) Connect() error {
 			db.config.Name,
 			sslMode,
 		)
+		db.ctx, err = gorm.Open(postgres.Open(db.dsn), &gormCfg)
 	case DriverSQLLite:
 		db.dsn = db.config.Filename
+		db.ctx, err = gorm.Open(sqlite.Open(db.dsn), &gormCfg)
 	default:
 		db.driver = DriverMySQL
 		if db.config.Charset == "" {
@@ -94,36 +100,39 @@ func (db *Database) Connect() error {
 			db.config.Name,
 			db.config.Charset,
 		)
+		db.ctx, err = gorm.Open(mysql.Open(db.dsn), &gormCfg)
 	}
-	db.ctx, err = gorm.Open(db.driver, db.dsn)
 	if err != nil {
 		return err
 	}
-	db.ctx.LogMode(db.config.DebugMode)
-	if err := db.startKeepAlive(); err != nil {
+	db.sql, err = db.ctx.DB()
+	if err != nil {
 		return err
 	}
-	dbContext = append(dbContext, db.ctx)
+	db.sql.SetMaxIdleConns(0)
+	db.sql.SetMaxOpenConns(100000)
+	if err = db.startKeepAlive(); err != nil {
+		return err
+	}
 	return nil
 }
 
 func (db *Database) Reconnect() error {
-	var err error
-	db.ctx, err = gorm.Open(db.driver, db.dsn)
-	if err != nil {
-		return err
-	}
-	return nil
+	return db.ConnectWithGormConfig(db.gormConfig)
 }
 
 func (db *Database) Ctx() *gorm.DB {
 	return db.ctx
 }
 
+func (db *Database) SqlDB() *sql.DB {
+	return db.sql
+}
+
 func (db *Database) MigrateDatabase(tables []interface{}) error {
 	tx := db.ctx.Begin()
 	for _, t := range tables {
-		if err := tx.AutoMigrate(t).Error; err != nil {
+		if err := tx.AutoMigrate(t); err != nil {
 			_ = tx.Rollback()
 			return err
 		}
@@ -131,14 +140,10 @@ func (db *Database) MigrateDatabase(tables []interface{}) error {
 	return tx.Commit().Error
 }
 
-func (db *Database) SetDebugMode(mode bool) {
-	db.ctx.LogMode(mode)
-}
-
 func (db *Database) startKeepAlive() error {
 	var err error
 	db.job, err = scheduler.Every(15).Seconds().Run(func() {
-		if err := db.ctx.DB().Ping(); err != nil {
+		if err := db.sql.Ping(); err != nil {
 			logrus.Errorln("Database keep alive error ->", err)
 			if err := db.Reconnect(); err != nil {
 				logrus.Errorln("Trying to reconnect to database error ->", err)
@@ -159,7 +164,7 @@ func (db *Database) stopKeepAlive() error {
 
 func (db *Database) Close() error {
 	_ = db.stopKeepAlive()
-	if err := db.ctx.Close(); err != nil {
+	if err := db.sql.Close(); err != nil {
 		return err
 	}
 	return nil
