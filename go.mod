@@ -1,4 +1,4 @@
-module github.com/patcharp/golib
+module github.com/patcharp/golib/v2
 
 go 1.16
 
