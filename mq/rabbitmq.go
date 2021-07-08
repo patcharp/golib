@@ -3,7 +3,7 @@ package mq
 import (
 	"fmt"
 	"github.com/carlescere/scheduler"
-	"github.com/patcharp/golib/util/httputil"
+	"github.com/patcharp/golib/v2/util/httputil"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"time"
