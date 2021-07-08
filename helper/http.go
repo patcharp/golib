@@ -3,9 +3,9 @@ package helper
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/patcharp/golib/crypto"
-	"github.com/patcharp/golib/server"
-	"github.com/patcharp/golib/util"
+	"github.com/patcharp/golib/v2/crypto"
+	"github.com/patcharp/golib/v2/server"
+	"github.com/patcharp/golib/v2/util"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"reflect"

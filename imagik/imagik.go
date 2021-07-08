@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/disintegration/imaging"
-	"github.com/patcharp/golib/requests"
+	"github.com/patcharp/golib/v2/requests"
 	"image"
 	"image/png"
 	"net/http"

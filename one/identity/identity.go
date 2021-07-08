@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/patcharp/golib/requests"
-	"github.com/patcharp/golib/util/httputil"
+	"github.com/patcharp/golib/v2/requests"
+	"github.com/patcharp/golib/v2/util/httputil"
 	"net/http"
 )
 

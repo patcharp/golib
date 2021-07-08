@@ -2,7 +2,7 @@ package helper
 
 import (
 	"errors"
-	"github.com/patcharp/golib/util"
+	"github.com/patcharp/golib/v2/util"
 	"regexp"
 	"strings"
 	"time"
