@@ -12,10 +12,16 @@ func init() {
 }
 
 func GenSecretString(n int) string {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	return GenSecretStringWithCustomRune(n, nil)
+}
+
+func GenSecretStringWithCustomRune(n int, r []rune) string {
+	if r == nil {
+		r = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	}
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+		b[i] = r[rand.Intn(len(r))]
 	}
 	return string(b)
 }
@@ -30,7 +36,6 @@ func ComparePasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-// TODO: How to use
 func ValidateString(p string, v []func(rune) bool) bool {
 	for _, testRune := range v {
 		found := false
