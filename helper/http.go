@@ -3,7 +3,6 @@ package helper
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/patcharp/golib/v2/crypto"
 	"github.com/patcharp/golib/v2/server"
 	"github.com/patcharp/golib/v2/util"
 	"github.com/sirupsen/logrus"
@@ -92,24 +91,20 @@ func HttpRedirectWithCode(ctx *fiber.Ctx, url string, code int) error {
  * Client request
  */
 func HttpInvalidRequest(ctx *fiber.Ctx, code int, err error, msg interface{}) error {
-	// TODO: Generate error code from error and return error code to frontend
-	errCode := crypto.GenSecretString(8)
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()
 	if util.GetEnv("HTTP_DEBUG", "false") == "true" {
 		logrus.Errorln(fmt.Sprintf(
-			"[CLIENT%d] %s (%s):%d error #%s -> %v",
+			"[CLIENT%d] %s (%s):%d error -> %v",
 			code,
 			funcName,
 			file,
 			line,
-			errCode,
 			err,
 		))
 	}
 	return HttpResponse(ctx, code, server.Result{
-		Message: msg,
-		Error:   fmt.Sprintf("#%s: %v", errCode, err),
+		Error: err.Error(),
 	})
 }
 
@@ -142,22 +137,18 @@ func HttpErrConflict(ctx *fiber.Ctx) error {
  * Server error
  */
 func HttpServerError(ctx *fiber.Ctx, code int, err error, msg interface{}) error {
-	// TODO: Generate error code from error and return error code to frontend
-	errCode := crypto.GenSecretString(8)
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()
 	logrus.Errorln(fmt.Sprintf(
-		"[SERVER%d] %s (%s):%d error #%s -> %v",
+		"[SERVER%d] %s (%s):%d error -> %v",
 		code,
 		funcName,
 		file,
 		line,
-		errCode,
 		err,
 	))
 	return HttpResponse(ctx, code, server.Result{
-		Message: msg,
-		Error:   fmt.Sprintf("#%s: %v", errCode, err),
+		Error: err.Error(),
 	})
 }
 
