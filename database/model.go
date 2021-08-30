@@ -8,11 +8,11 @@ import (
 
 // Model struct
 type Model struct {
-	Seq       int64      `json:"seq" gorm:"primary_key;auto_increment:false;index" sql:"index"`
-	Uid       uuid.UUID  `json:"uid" gorm:"primary_key;index" sql:"index"`
-	CreatedAt time.Time  `json:"created_at" gorm:"index" sql:"index"`
-	UpdatedAt time.Time  `json:"updated_at"`
-	DeletedAt *time.Time `json:"deleted_at" gorm:"index" sql:"index"`
+	Seq       int64          `json:"seq" gorm:"primary_key;auto_increment:false;"`
+	Uid       uuid.UUID      `json:"uid" gorm:"primary_key;index"`
+	CreatedAt time.Time      `json:"created_at" gorm:"index"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
 // BeforeCreate hook table
