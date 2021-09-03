@@ -104,7 +104,7 @@ func HttpInvalidRequest(ctx *fiber.Ctx, code int, err error, msg interface{}) er
 		))
 	}
 	return HttpResponse(ctx, code, server.Result{
-		Error: err.Error(),
+		Error: msg,
 	})
 }
 
@@ -148,7 +148,7 @@ func HttpServerError(ctx *fiber.Ctx, code int, err error, msg interface{}) error
 		err,
 	))
 	return HttpResponse(ctx, code, server.Result{
-		Error: err.Error(),
+		Error: msg,
 	})
 }
 
