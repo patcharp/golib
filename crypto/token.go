@@ -55,7 +55,7 @@ func DecryptToken(tokenString string, key *rsa.PrivateKey) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("invalid token signature")
 	}
-	if err := VerifySignedByRSAKey(&key.PublicKey, data, signature); err != nil {
+	if err := VerifySignedByRSAKey(key.PublicKey, data, signature); err != nil {
 		return nil, err
 	}
 	return data, nil
