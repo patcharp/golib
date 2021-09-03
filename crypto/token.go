@@ -28,7 +28,7 @@ func DecodeJWTAccessToken(tokenString string, claims jwt.Claims, signKey *rsa.Pr
 	return nil, errors.New("decode token error")
 }
 
-func EncodeRefreshToken(data []byte, key *rsa.PrivateKey) (string, error) {
+func EncryptToken(data []byte, key *rsa.PrivateKey) (string, error) {
 	cipherByte, err := RSAEncrypt(key, data)
 	if err != nil {
 		return "", err
@@ -42,7 +42,7 @@ func EncodeRefreshToken(data []byte, key *rsa.PrivateKey) (string, error) {
 	return token, nil
 }
 
-func DecodeRefreshToken(tokenString string, key *rsa.PrivateKey) ([]byte, error) {
+func DecryptToken(tokenString string, key *rsa.PrivateKey) ([]byte, error) {
 	cipherText := strings.Split(tokenString, ".")
 	if len(cipherText) != 2 {
 		return nil, errors.New("invalid refresh token format")
