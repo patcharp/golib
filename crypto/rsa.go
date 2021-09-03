@@ -88,11 +88,11 @@ func SignByRSAKey(key *rsa.PrivateKey, data []byte) ([]byte, error) {
 	)
 }
 
-func VerifySignedByRSAKey(key *rsa.PublicKey, digest []byte, signature []byte) error {
+func VerifySignedByRSAKey(key rsa.PublicKey, digest []byte, signature []byte) error {
 	var opts rsa.PSSOptions
 	opts.SaltLength = rsa.PSSSaltLengthAuto
 	return rsa.VerifyPSS(
-		key,
+		&key,
 		crypto.SHA512,
 		digest,
 		signature,
