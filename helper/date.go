@@ -21,6 +21,7 @@ func (d *Date) Set(t time.Time) {
 }
 
 func (d *Date) Convert(date string) error {
+	// 02-12-2021
 	if matched, _ := regexp.MatchString(`^\d{1,2}-\d{1,2}-\d{4}$`, date); matched {
 		// Correct selected month
 		splitText := strings.Split(date, "-")
