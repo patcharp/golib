@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	Timeout = 5
+	Timeout = 10
 )
 
 type Response struct {

@@ -8,7 +8,7 @@ import (
 )
 
 type ClusterConfig struct {
-	Addr     string // 10.0.0.1:6379,10.0.0.2:6379
+	Addr     string // e.g. 10.0.0.1:6379,10.0.0.2:6379
 	Password string
 }
 
