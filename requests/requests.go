@@ -9,7 +9,13 @@ import (
 	"time"
 )
 
+var DefaultTLSConfig = tls.Config{InsecureSkipVerify: true}
+
 func Request(method string, url string, headers map[string]string, body io.Reader, timeout int) (Response, error) {
+	return RequestWithTLSConfig(method, url, headers, body, timeout, nil)
+}
+
+func RequestWithTLSConfig(method string, url string, headers map[string]string, body io.Reader, timeout int, tlsCfg *tls.Config) (Response, error) {
 	if timeout == 0 {
 		timeout = Timeout
 	}
@@ -24,8 +30,10 @@ func Request(method string, url string, headers map[string]string, body io.Reade
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
-
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	if tlsCfg == nil {
+		tlsCfg = &DefaultTLSConfig
+	}
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsCfg
 	req = req.WithContext(ctx)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
