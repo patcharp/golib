@@ -15,13 +15,12 @@ func ConvertToByte(payload string) []byte {
 // BytesPadding adds padding to the bytes
 func BytesPadding(b bytes) []byte {
 	const padding = 0
-	payload := b
-	if len(payload) < 4096 {
-		for len(payload) <= 4096 {
-			payload = append(payload, byte(padding))
+	if len(b) < 4096 {
+		for len(b) <= 4096 {
+			b = append(b, byte(padding))
 		}
 	}
-	return payload
+	return b
 }
 
 // Hash computes a SHA256 hash from a given value
