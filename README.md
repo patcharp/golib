@@ -1,9 +1,9 @@
-[![Go Doc](https://img.shields.io/badge/%F0%9F%93%9A%20godoc-pkg-00ACD7.svg?color=00ACD7&style=flat)](https://pkg.go.dev/github.com/patcharp/golib/v2?tab=doc)
-[![Go Report Card](https://goreportcard.com/badge/github.com/patcharp/golib)](https://goreportcard.com/report/github.com/patcharp/golib)
-
 <p align="center">
     <b>Golib</b> เป็นโปรเจ็คที่รวบรวมเอา Package ที่มีการใช้งานบ่อยๆ มาแพ็ครวมกัน และทำ function พร้อม configuration พื้นฐานให้สามารถนำไปใช้งานได้ง่ายๆ
 </p>
+
+[![Go Doc](https://img.shields.io/badge/%F0%9F%93%9A%20godoc-pkg-00ACD7.svg?color=00ACD7&style=flat)](https://pkg.go.dev/github.com/patcharp/golib/v2?tab=doc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/patcharp/golib)](https://goreportcard.com/report/github.com/patcharp/golib)
 
 ## ⚙️ Installation
 
