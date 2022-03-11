@@ -76,7 +76,7 @@ var DefaultServerAccessLog = func(lvl logrus.Level) fiber.Handler {
 
 // DefaultFiberConfig that use for standard fiber configuration
 var DefaultFiberConfig = fiber.Config{
-	Prefork:               util.GetEnv("HTTP_PRE_FORK", "true") == "true",
+	Prefork:               util.GetEnv("HTTP_PRE_FORK", "false") == "true",
 	ServerHeader:          util.GetEnv("HTTP_SERVER_HEADER", "GoFiber"),
 	ProxyHeader:           util.GetEnv("HTTP_PROXY_HEADER", httputil.HeaderXForwardedFor),
 	ReduceMemoryUsage:     util.GetEnv("HTTP_REDUCE_MEMORY_USAGE", "true") == "true",
