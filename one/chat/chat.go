@@ -83,7 +83,7 @@ func (c *Chat) FindFriend(keyword string) (Friend, error) {
 		Keyword: keyword,
 	}
 	body, _ := json.Marshal(&msg)
-	r, err := c.send(http.MethodPost, c.url("/message/api/v1/searchfriend"), body)
+	r, err := c.send(http.MethodPost, c.url("/manage/api/v1/searchfriend"), body)
 	if err != nil {
 		return Friend{}, err
 	}
@@ -329,7 +329,7 @@ func (c *Chat) CloseWebView(to string) error {
 		BotId:  c.BotId,
 	}
 	body, _ := json.Marshal(&pushBody)
-	r, err := c.send(http.MethodPost, c.url("/message/api/v2/disable_webview"), body)
+	r, err := c.send(http.MethodPost, c.url("/manage/api/v2/disable_webview"), body)
 	if err != nil {
 		return err
 	}

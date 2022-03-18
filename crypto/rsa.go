@@ -76,13 +76,13 @@ func RSADecrypt(key *rsa.PrivateKey, cipherText []byte) ([]byte, error) {
 func SignByRSAKey(key *rsa.PrivateKey, data []byte) ([]byte, error) {
 	var opts rsa.PSSOptions
 	opts.SaltLength = rsa.PSSSaltLengthAuto
-	newHash := crypto.SHA512
+	newHash := crypto.SHA256
 	pssHash := newHash.New()
 	pssHash.Write(data)
 	return rsa.SignPSS(
 		rand.Reader,
 		key,
-		crypto.SHA512,
+		crypto.SHA256,
 		pssHash.Sum(nil),
 		&opts,
 	)
@@ -93,7 +93,7 @@ func VerifySignedByRSAKey(key rsa.PublicKey, digest []byte, signature []byte) er
 	opts.SaltLength = rsa.PSSSaltLengthAuto
 	return rsa.VerifyPSS(
 		&key,
-		crypto.SHA512,
+		crypto.SHA256,
 		digest,
 		signature,
 		&opts,
