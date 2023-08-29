@@ -39,7 +39,7 @@ func Contains(slice []string, item string) bool {
 	return ok
 }
 
-// Real display width string - remove floating char
+// StringDisplayWidth - Real display width string - remove floating char
 func StringDisplayWidth(str string) int {
 	floatingChar := map[string][]string{
 		"thai": []string{"ิ", "ี", "ึ", "ื", "ุ", "ู", "่", "้", "๊", "๋", "์"},

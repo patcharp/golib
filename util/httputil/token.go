@@ -3,6 +3,7 @@ package httputil
 import (
 	"github.com/gofiber/fiber/v2"
 	uuid "github.com/satori/go.uuid"
+	"github.com/segmentio/ksuid"
 	"strings"
 )
 
@@ -26,9 +27,23 @@ func GetApiKey(ctx *fiber.Ctx) string {
 	return ctx.Get(HeaderXApiKey)
 }
 
-func GetQueryId(ctx *fiber.Ctx, qName string, id *uuid.UUID) error {
+func GetCtxParamId(ctx *fiber.Ctx, qName string, id *uuid.UUID) error {
 	var err error
+	if id == nil {
+		id = &uuid.UUID{}
+	}
 	if *id, err = uuid.FromString(ctx.Params(qName)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetCtxParamKId(ctx *fiber.Ctx, param string, id *ksuid.KSUID) error {
+	var err error
+	if id == nil {
+		id = &ksuid.KSUID{}
+	}
+	if *id, err = ksuid.Parse(ctx.Params(param)); err != nil {
 		return err
 	}
 	return nil

@@ -31,6 +31,11 @@ func HashPassword(password string) (string, error) {
 	return string(bytes), err
 }
 
+func HashPasswordWithCost(password string, cost int) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), cost)
+	return string(bytes), err
+}
+
 func ComparePasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
