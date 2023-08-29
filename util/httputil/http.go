@@ -62,7 +62,6 @@ const (
 	HeaderServer              = "Server"
 	HeaderOrigin              = "Origin"
 
-	// Access control
 	HeaderAccessControlRequestMethod    = "Access-Control-Request-Method"
 	HeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
 	HeaderAccessControlAllowOrigin      = "Access-Control-Allow-Origin"
@@ -72,7 +71,6 @@ const (
 	HeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
 	HeaderAccessControlMaxAge           = "Access-Control-Max-Age"
 
-	// Security
 	HeaderStrictTransportSecurity         = "Strict-Transport-Security"
 	HeaderXContentTypeOptions             = "X-Content-Type-Options"
 	HeaderXXSSProtection                  = "X-XSS-Protection"
@@ -85,7 +83,9 @@ const (
 
 // Cr. https://github.com/gin-gonic/gin/blob/master/utils.go
 // H is a shortcut for map[string]interface{}
+
 type Json map[string]interface{}
 
 // HTTP Header shortcut
+
 type Headers map[string]string
