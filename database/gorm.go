@@ -24,6 +24,15 @@ type Config struct {
 	Charset    string
 }
 
+type MySQLConfig struct {
+	Host         string
+	Port         string
+	Username     string
+	Password     string
+	DatabaseName string
+	DebugMode    bool
+}
+
 type Database struct {
 	config     Config
 	driver     string
@@ -50,8 +59,24 @@ func NewWithConfig(cfg Config, driver string) Database {
 	}
 }
 
+func NewMySqlWithConfig(my MySQLConfig) Database {
+	return NewWithConfig(Config{
+		Host:      my.Host,
+		Port:      my.Port,
+		Username:  my.Username,
+		Password:  my.Password,
+		Name:      my.DatabaseName,
+		DebugMode: my.DebugMode,
+		Charset:   DefaultMySQLCharset,
+	},
+		DriverMySQL,
+	)
+}
+
 func (db *Database) Connect() error {
-	return db.ConnectWithGormConfig(gorm.Config{})
+	return db.ConnectWithGormConfig(gorm.Config{
+		Logger: NewGormLog(),
+	})
 }
 
 func (db *Database) ConnectWithGormConfig(gormCfg gorm.Config) error {
@@ -105,12 +130,14 @@ func (db *Database) ConnectWithGormConfig(gormCfg gorm.Config) error {
 	if err != nil {
 		return err
 	}
+	if db.config.DebugMode {
+		db.ctx = db.ctx.Debug()
+	}
+
 	db.sql, err = db.ctx.DB()
 	if err != nil {
 		return err
 	}
-	db.sql.SetMaxIdleConns(0)
-	db.sql.SetMaxOpenConns(100000)
 	if err = db.startKeepAlive(); err != nil {
 		return err
 	}

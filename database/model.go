@@ -2,6 +2,7 @@ package database
 
 import (
 	uuid "github.com/satori/go.uuid"
+	"github.com/segmentio/ksuid"
 	"gorm.io/gorm"
 	"time"
 )
@@ -24,14 +25,17 @@ func (m *Model) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// Preload
-type Preload struct {
-	Column     string        `json:"column"`
-	Conditions []interface{} `json:"conditions"`
+// KSModel is uid alternative
+type KSModel struct {
+	Uid       ksuid.KSUID    `json:"uid" gorm:"primary_key;type:varbinary(27);index"`
+	CreatedAt time.Time      `json:"created_at" gorm:"index"`
+	UpdatedAt time.Time      `json:"updated_at"`
+	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }
 
-// Where
-type Where struct {
-	Condition string        `json:"condition"`
-	Arguments []interface{} `json:"args"`
+func (ks *KSModel) BeforeCreate(tx *gorm.DB) error {
+	if ksuid.Compare(ksuid.Nil, ks.Uid) == 0 {
+		ks.Uid = ksuid.New()
+	}
+	return nil
 }
