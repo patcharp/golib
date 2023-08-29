@@ -1,23 +1,29 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/patcharp/golib/v2/util"
 	"github.com/patcharp/golib/v2/util/httputil"
+	"github.com/segmentio/ksuid"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"time"
 )
 
 type Config struct {
-	Host string
-	Port string
-	// Fiber Config
-	Config *fiber.Config
+	Host        string
+	Port        string
+	Config      *fiber.Config
+	HealthCheck bool
+	RequestId   bool
 }
 
 type Server struct {
@@ -34,7 +40,33 @@ func New(config Config) Server {
 	} else {
 		s.app = fiber.New()
 	}
-	s.app.Use(recover.New())
+
+	s.app.Use(logger.New(logger.Config{
+		Format:     "${locals:requestid} - ${ip} - ${method} ${path} ${status} - ${latency}\n",
+		TimeZone:   "Asia/Bangkok",
+		TimeFormat: time.ANSIC,
+		Next: func(c *fiber.Ctx) bool {
+			// no log for health check
+			if c.Path() == "/api/-/health" {
+				return true
+			}
+			return false
+		},
+	}))
+
+	s.app.Use(recover.New(recover.Config{
+		EnableStackTrace:  true,
+		StackTraceHandler: fiberStackTraceHandler,
+	}))
+
+	if config.HealthCheck {
+		s.EnableHealthCheck()
+	}
+
+	if config.RequestId {
+		s.EnableRequestId()
+	}
+
 	return s
 }
 
@@ -45,7 +77,24 @@ func (s *Server) Run() error {
 		_ = <-c
 		_ = s.app.Shutdown()
 	}()
+
 	return s.app.Listen(fmt.Sprintf("%s:%s", s.config.Host, s.config.Port))
+}
+
+func (s *Server) EnableRequestId() {
+	s.config.RequestId = true
+	s.app.Use(requestid.New(requestid.Config{
+		Generator: func() string {
+			return ksuid.New().String()
+		},
+	}))
+}
+
+func (s *Server) EnableHealthCheck() {
+	s.config.HealthCheck = true
+	s.app.Get("/api/-/health", func(ctx *fiber.Ctx) error {
+		return ctx.Status(http.StatusOK).SendString("ok")
+	})
 }
 
 func (s *Server) App() *fiber.App {
@@ -53,25 +102,17 @@ func (s *Server) App() *fiber.App {
 }
 
 // DefaultErrorHandler that process return errors from handlers
-var DefaultErrorHandler = func(c *fiber.Ctx, err error) error {
+var DefaultErrorHandler = func(ctx *fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
-	if e, ok := err.(*fiber.Error); ok {
+	var e *fiber.Error
+	if errors.As(err, &e) {
 		code = e.Code
 	}
-	c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
-	return c.Status(code).JSON(fiber.Map{"error": err.Error()})
-}
-
-// DefaultServerAccessLog that use for enable fiber log to specific router
-var DefaultServerAccessLog = func(lvl logrus.Level) fiber.Handler {
-	logOut := logrus.New()
-	logOut.SetLevel(lvl)
-	return logger.New(logger.Config{
-		Format:     "${time} ${method} ${path} - ${ip} - ${status} - ${latency}\n",
-		TimeZone:   "Asia/Bangkok",
-		TimeFormat: time.ANSIC,
-		Output:     logOut.WriterLevel(lvl),
-	})
+	if code >= fiber.StatusInternalServerError {
+		logrus.Error("[PANIC] "+fmt.Sprintf(" [%s] ", ctx.IP())+ctx.Route().Method+ctx.Route().Path+" -> ", err)
+	}
+	ctx.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+	return ctx.Status(code).JSON(fiber.Map{"error": err.Error()})
 }
 
 // DefaultFiberConfig that use for standard fiber configuration
@@ -93,4 +134,8 @@ func ApplyStaticRoute(s *fiber.App, publicDir string) {
 	s.Get("/*", func(ctx *fiber.Ctx) error {
 		return ctx.SendFile(fmt.Sprintf("%s/index.html", publicDir))
 	})
+}
+
+func fiberStackTraceHandler(_ *fiber.Ctx, e interface{}) {
+	logrus.Error(fmt.Sprintf("[PANIC] %v\n%s\n", e, debug.Stack()))
 }
