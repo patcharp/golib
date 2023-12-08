@@ -75,7 +75,7 @@ func NewMySqlWithConfig(my MySQLConfig) Database {
 
 func (db *Database) Connect() error {
 	return db.ConnectWithGormConfig(gorm.Config{
-		Logger: NewGormLog(),
+		Logger: NewGormLog(db.config.DebugMode),
 	})
 }
 
@@ -142,6 +142,10 @@ func (db *Database) ConnectWithGormConfig(gormCfg gorm.Config) error {
 		return err
 	}
 	return nil
+}
+
+func (db *Database) SetDebug() {
+	db.ctx = db.ctx.Debug()
 }
 
 func (db *Database) Reconnect() error {

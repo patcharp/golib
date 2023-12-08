@@ -88,13 +88,16 @@ func SignByRSAKey(key *rsa.PrivateKey, data []byte) ([]byte, error) {
 	)
 }
 
-func VerifySignedByRSAKey(key rsa.PublicKey, digest []byte, signature []byte) error {
+func VerifySignedByRSAKey(key rsa.PublicKey, data []byte, signature []byte) error {
 	var opts rsa.PSSOptions
 	opts.SaltLength = rsa.PSSSaltLengthAuto
+	newHash := crypto.SHA256
+	pssHash := newHash.New()
+	pssHash.Write(data)
 	return rsa.VerifyPSS(
 		&key,
 		crypto.SHA256,
-		digest,
+		pssHash.Sum(nil),
 		signature,
 		&opts,
 	)
