@@ -7,7 +7,7 @@
 
 ## ⚙️ Installation
 
-ใช้ได้กับ Go version `1.19` ขึ้นไป ซึ่งสามารถดาวโหลด และติดตั้งได้ที่นี่ [Go Download](https://golang.org/dl/)
+ใช้ได้กับ Go version `1.21` ขึ้นไป ซึ่งสามารถดาวโหลด และติดตั้งได้ที่นี่ [Go Download](https://golang.org/dl/)
 
 หลังจากนั้นก็เริ่มต้นโปรเจ็คใหม่ของคุณ และใช้คำสั่ง `go get` เพื่อติดตั้ง golib ใช้งาน
 
@@ -150,7 +150,7 @@ func main() {
 
   // Query specific user where id equal to 10
   var user User
-  if err := db.Ctx().Where("id=?", 10).First(&user).Error; err != nil {
+  if err := db.Ctx().Where("id=?", 10).Take(&user).Error; err != nil {
     if errors.Is(err, gorm.ErrRecordNotFound) {
       logrus.Errorln("User who has id = 10 was not found")
       return
@@ -169,6 +169,27 @@ func main() {
 ถ้าคุณชอบที่สามารถนำไปใช้งานได้ในโครงการของคุณ และต้องการขอบคุณ กรุณากดให้ [GitHub Star](https://github.com/patcharp/golib/stargazers) แก่เราด้วย เพื่อเป็นกำลังใจให้พัฒนาต่อไป
 
 ## 🚀 Release log
+*v2.0.10 - 8 Dec 2023*
+- go.mod
+  - 🐞 แก้ไข 3rd party MySQL package มีปัญหา error หลังจากที่ import ไปใช้
+  - 🐞 Update 3rd part package version
+  - ⚡️ ปรับ Go version ให้เป็น Go 1.21
+- crypto
+  - ✨ เพิ่มฟังชัน AESByteEncrypt, AESByteDecrypt สำหรับเข้ารหัสข้อมูลประเภท Byte
+  - ✨ เพิ่มฟังชัน EncryptTokenWithSign, DecryptTokenWithVerifySign เพื่อแนบ Signature และ Verify Signature
+  - ⚡️ ปรับฟัง EncryptToken, DecryptToken ให้ไม่ต้อง Verify Signature และแนบ Signature
+  - 🐞 แก้ไขฟังชัน VerifySignedByRSAKey ให้ verify signature ได้
+  - 🐞 แก้ไขฟังชัน EncodeJWTAccessToken ให้ใช้ RS256 แทนของเดิมที่ key ยาวเกิน
+- database
+  - ✨ เพิ่มฟังชัน SetDebug สำหรับ set debug database
+  - 🐞 แก้ไข Gorm logger ให้ log severity เหมือนกันกับ database config
+- imagik
+  - ✨ เพิ่มฟังชันสำหรับ New struct => NewImagikFromFile, NewImagikFromByte, NewImagikFromUrl
+  - ✨ เพิ่มฟังชัน ResizeWithFilter ให้สามารถกำหนด filter algorithm ได้เอง
+  - ✨ เพิ่มฟังชัน ExportAsFileWithQuality ให้สามารถกำหนด JPEG Quality ได้
+- server
+  - ⚡️ ปรับปรุง ErrorHandler ของ DefaultConfig ให้เป็นตาม DefaultErrorHandler
+  - 🐞 แก้ไข Skipper ให้สามารถใช้งานได้ตามที่ตั้งค่าไป
 *v2.0.9 - 29 Aug 2023*
 - crypto
   - ✨ เพิ่ม function ให้สามารถ hash password โดยกำหนดรอบได้เอง

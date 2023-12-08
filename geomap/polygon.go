@@ -26,7 +26,7 @@ func Point(lat float64, long float64) orb.Point {
 	return orb.Point{long, lat}
 }
 
-// isPointInsidePolygon runs through the MultiPolygon and Polygons within a
+// IsInside isPointInsidePolygon runs through the MultiPolygon and Polygons within a
 // feature collection and checks if a point (long/lat) lies within it.
 func (m *Map) IsInside(point orb.Point) (Property, bool) {
 	var p Property

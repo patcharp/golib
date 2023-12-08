@@ -122,6 +122,7 @@ var DefaultFiberConfig = fiber.Config{
 	ProxyHeader:           util.GetEnv("HTTP_PROXY_HEADER", httputil.HeaderXForwardedFor),
 	ReduceMemoryUsage:     util.GetEnv("HTTP_REDUCE_MEMORY_USAGE", "true") == "true",
 	DisableStartupMessage: util.GetEnv("HTTP_DISABLE_STARTUP_MESSAGE", "true") == "true",
+	ErrorHandler:          DefaultErrorHandler,
 }
 
 // ApplyStaticRoute that use for serve angular built

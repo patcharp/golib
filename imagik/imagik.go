@@ -24,6 +24,30 @@ type Imagik struct {
 	Size     int
 }
 
+func NewImagikFromFile(filename string) (*Imagik, error) {
+	var img Imagik
+	if err := img.LoadFromFile(filename); err != nil {
+		return nil, err
+	}
+	return &img, nil
+}
+
+func NewImagikFromByte(b []byte) (*Imagik, error) {
+	var img Imagik
+	if err := img.LoadFromByte(b); err != nil {
+		return nil, err
+	}
+	return &img, nil
+}
+
+func NewImagikFromUrl(url string, headers map[string]string) (*Imagik, error) {
+	var img Imagik
+	if err := img.LoadFromUrl(url, headers); err != nil {
+		return nil, err
+	}
+	return &img, nil
+}
+
 func (img *Imagik) LoadFromFile(filename string) error {
 	var err error
 	img.Img, err = imaging.Open(filename, imaging.AutoOrientation(true))
@@ -75,6 +99,10 @@ func (img *Imagik) Rotation() int {
 
 func (img *Imagik) Resize(w int, h int) {
 	img.Img = imaging.Resize(img.Img, w, h, imaging.Lanczos)
+}
+
+func (img *Imagik) ResizeWithFilter(w int, h int, filter imaging.ResampleFilter) {
+	img.Img = imaging.Resize(img.Img, w, h, filter)
 }
 
 func (img *Imagik) CropCenter(w int, h int) {
@@ -144,6 +172,14 @@ func (img *Imagik) ExportAsByte() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func (img *Imagik) ExportAsByteWithQuality(q int) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := imaging.Encode(&buf, img.Img, imaging.JPEG, imaging.JPEGQuality(q)); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
 func (img *Imagik) ExportAsPNGByte() ([]byte, error) {
 	var buf bytes.Buffer
 	if err := imaging.Encode(&buf, img.Img, imaging.PNG, imaging.PNGCompressionLevel(100)); err != nil {
@@ -162,6 +198,13 @@ func (img *Imagik) ExportAsPNGByteWithCompLevel(compLevel png.CompressionLevel) 
 
 func (img *Imagik) ExportAsFile(filename string) error {
 	if err := imaging.Save(img.Img, filename, imaging.JPEGQuality(100)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (img *Imagik) ExportAsFileWithQuality(filename string, q int) error {
+	if err := imaging.Save(img.Img, filename, imaging.JPEGQuality(q)); err != nil {
 		return err
 	}
 	return nil

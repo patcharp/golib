@@ -17,11 +17,11 @@ type Logger struct {
 	Debug                 bool
 }
 
-func NewGormLog() *Logger {
+func NewGormLog(debug bool) *Logger {
 	return &Logger{
 		SlowThreshold:         time.Millisecond * 200,
 		SkipErrRecordNotFound: false,
-		Debug:                 true,
+		Debug:                 debug,
 	}
 }
 
